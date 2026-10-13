@@ -1,0 +1,249 @@
+---
+import Base from '../../layouts/Base.astro';
+import PolicyFields from '../../components/PolicyFields.astro';
+import MarginTypeFields from '../../components/MarginTypeFields.astro';
+---
+
+<Base
+  title="구매대행 마진 계산기"
+  description="판매가와 원가를 넣으면 마켓 수수료·결제 수수료·광고비·반품위험·물류비·부가세를 모두 빼고 실제로 남는 마진과 마진율을 계산합니다. 구매대행·로켓그로스·해외직구·사입 4가지 방식을 지원합니다."
+>
+  <h1>구매대행 마진 계산기</h1>
+  <p class="lede">
+    판매가에서 <strong>빠져나가는 돈을 전부</strong> 빼고 실제로 손에 남는 금액을 계산합니다.
+    마켓 수수료만 빼고 계산하면 실제보다 훨씬 남는 것처럼 보입니다 —
+    결제 수수료·광고비·반품·부가세가 빠져 있기 때문입니다.
+  </p>
+
+  <form id="f" novalidate>
+    <fieldset>
+      <legend>판매 정보</legend>
+      <MarginTypeFields />
+      <div class="field-grid">
+        <div class="field">
+          <label for="salePrice">판매가 (원)</label>
+          <input id="salePrice" name="salePrice" inputmode="numeric" data-krw
+                 placeholder="30,000" value="30,000" required />
+          <span class="hint">구매자가 결제하는 금액(부가세 포함).</span>
+        </div>
+        <div class="field">
+          <label for="costAmount">원가·공급가 (원)</label>
+          <input id="costAmount" name="costAmount" inputmode="numeric" data-krw
+                 placeholder="12,000" value="12,000" required />
+          <span class="hint">상품을 들여오는 데 든 금액. 내가 부담하는 택배비도 여기 포함.</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <PolicyFields />
+
+    <div class="btn-row">
+      <button type="submit" class="btn">마진 계산</button>
+      <button type="reset" class="btn ghost">초기화</button>
+    </div>
+  </form>
+
+  <div id="msg" hidden></div>
+
+  <section id="out" class="result" hidden aria-live="polite">
+    <div class="headline" id="head">
+      <div>
+        <span class="lbl">남는 마진</span>
+        <span class="big" id="marginAmount">—</span>
+      </div>
+      <div>
+        <span class="lbl">마진율</span>
+        <span class="big" id="marginRate">—</span>
+      </div>
+      <div>
+        <span class="lbl">개당 손익분기 판매가</span>
+        <span class="big" id="breakEven" style="font-size:1.25rem">—</span>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <caption class="hint" style="text-align:left;padding:.5rem 0">
+          판매가에서 빠져나가는 항목
+        </caption>
+        <thead>
+          <tr><th>항목</th><th class="num">금액</th><th class="num">판매가 대비</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <h2>이 계산에 쓰인 식</h2>
+    <pre class="formula" id="formula"></pre>
+    <p class="hint">
+      부가세 과세표준은 <code>판매가 − 마켓수수료</code>로 단순화했습니다.
+      실제 신고는 매입세액 공제 등에 따라 달라지므로 세무 상담으로 확인하세요.
+    </p>
+  </section>
+
+  <hr />
+
+  <h2>마진이 생각보다 안 남는 이유</h2>
+  <p>
+    셀러가 마진을 과대평가하는 가장 흔한 패턴은 <strong>마켓 수수료만 빼고 계산하는 것</strong>입니다.
+    3만원짜리를 1만 2천원에 들여와 10.8% 수수료를 빼면 1만 4,760원이 남는 것처럼 보입니다.
+    하지만 실제로는 여기서 결제 수수료, 광고비, 반품으로 나가는 몫, 그리고 부가세가 더 빠집니다.
+  </p>
+
+  <h3>자주 빠뜨리는 비용 4가지</h3>
+  <ol>
+    <li>
+      <strong>부가세</strong> — 가장 많이 빠뜨리는 항목이고 금액도 가장 큽니다.
+      판매가의 약 9%(= 10/110)가 내 돈이 아닙니다. 매입세액 공제를 받더라도
+      공제 전 기준으로 먼저 계산해 보는 편이 안전합니다.
+    </li>
+    <li>
+      <strong>광고비</strong> — 광고로 팔린 건만 광고비를 붙이면 안 됩니다.
+      전체 매출에서 전체 광고비를 나눈 <em>평균</em>으로 넣어야 실제 수익률이 나옵니다.
+    </li>
+    <li>
+      <strong>반품</strong> — 반품 1건은 그 건의 마진만 날리는 것이 아니라
+      왕복 배송비와 재포장 비용까지 가져갑니다. 반품률 2%는 "100건 중 2건이 손실"이 아니라
+      "전체 매출의 2% 이상이 사라진다"에 가깝습니다. 의류는 8%를 넘기기도 합니다.
+    </li>
+    <li>
+      <strong>결제 수수료 중복</strong> — 반대 방향의 실수입니다. 쿠팡·스마트스토어처럼
+      판매수수료에 결제 수수료가 포함된 마켓에서 결제 수수료를 또 빼면
+      마진이 실제보다 낮게 나옵니다. 이 계산기는 그 경우 경고를 띄웁니다.
+    </li>
+  </ol>
+
+  <h3>"0원"과 "모른다"는 다릅니다</h3>
+  <p>
+    이 도구는 입력칸을 비워 두면 <strong>0원으로 계산하되 경고를 띄웁니다.</strong>
+    광고를 정말 안 돌려서 0원인 것과, 광고비를 모르는 것은 전혀 다른 상태입니다.
+    모르는 값을 0으로 뭉개면 마진이 조용히 부풀고, 그 상태로 가격을 정하면
+    손해를 보면서 그 사실을 모르게 됩니다. 확실히 0이라면 <code>0</code>을 입력하세요.
+  </p>
+
+  <h3>판매 방식별로 원가가 다르게 잡힙니다</h3>
+  <ul>
+    <li><strong>구매대행</strong> — 공급가 + 구매대행 수수료 + 국제배송비가 원가입니다.</li>
+    <li><strong>로켓그로스</strong> — 입고비·출고비·보관료가 붙습니다. 보관 일수가 길면 보관료가 마진을 깎습니다.</li>
+    <li><strong>해외직구(사입)</strong> — 관세와 환율 변동분을 원가에 미리 잡아야 합니다.</li>
+    <li><strong>일반 사입·리셀</strong> — 직접 보관·발송하므로 물류 대행비가 없습니다. 대신 내 택배비를 원가에 넣으세요.</li>
+  </ul>
+
+  <section class="faq">
+    <h2>자주 묻는 질문</h2>
+    <details>
+      <summary>입력한 숫자가 서버로 전송되나요?</summary>
+      <p>
+        아니요. 모든 계산은 브라우저 안에서 실행됩니다. 원가·판매가 같은 민감한 숫자가
+        어디로도 나가지 않습니다. 인터넷 연결을 끊고도 동작합니다.
+      </p>
+    </details>
+    <details>
+      <summary>수수료 기본값은 정확한가요?</summary>
+      <p>
+        <strong>아니요 — 추정치입니다.</strong> 공개된 수수료 구간의 대표값일 뿐이고
+        실제 요율은 카테고리·계약·프로모션에 따라 다릅니다. 정산서에 찍힌 실제 요율로
+        고쳐서 쓰세요. 그래서 모든 값을 수정할 수 있게 만들었습니다.
+      </p>
+    </details>
+    <details>
+      <summary>마진율은 무엇을 기준으로 한 비율인가요?</summary>
+      <p>
+        <strong>판매가 기준</strong>입니다(<code>마진 ÷ 판매가</code>). 원가 기준으로 계산하는
+        "마크업"과는 다릅니다. 원가 1만원을 2만원에 팔면 마진율은 50%, 마크업은 100%입니다.
+        마켓 정산서와 비교할 때는 판매가 기준이 맞습니다.
+      </p>
+    </details>
+    <details>
+      <summary>손익분기 판매가는 어떻게 계산했나요?</summary>
+      <p>
+        마진율이 정확히 0%가 되는 판매가입니다. 이 가격보다 싸게 팔면 팔 때마다 손해입니다.
+        같은 역산 로직을 목표 마진 0%로 돌려 구합니다.
+      </p>
+    </details>
+  </section>
+
+  <p style="margin-top:2rem">
+    목표 마진율에서 거꾸로 판매가를 구하려면 <a href="/tools/reverse-price">판매가 역산 도구</a>를,
+    마켓별로 어디가 더 남는지 보려면 <a href="/tools/fee-compare">수수료 비교 도구</a>를 쓰세요.
+  </p>
+</Base>
+
+<script>
+  import { computeExpectedMargin, reverseCalcPriceForTargetMargin, MARGIN_FORMULA } from '../../lib/calc.js';
+  import { formatKrw, parseKrw, rate4ToPercent } from '../../lib/money.js';
+  import { collectPolicies, collectExtras, attachThousandsFormatting, showError, showWarnings } from '../../lib/form.js';
+
+  const form = document.getElementById('f');
+  const out = document.getElementById('out');
+  const msg = document.getElementById('msg');
+  const rows = document.getElementById('rows');
+  const head = document.getElementById('head');
+
+  attachThousandsFormatting(document);
+  document.getElementById('formula').textContent = MARGIN_FORMULA;
+
+  /** 판매가 대비 비율 표시 — 표시용이므로 소수 1자리로 충분하다. */
+  function share(amount, salePrice) {
+    if (!salePrice) return '—';
+    const tenths = Math.round((amount * 1000) / salePrice);
+    return `${(tenths / 10).toFixed(1)}%`;
+  }
+
+  function row(label, amount, salePrice, opts = {}) {
+    const tr = document.createElement('tr');
+    if (opts.total) tr.className = 'total';
+    const sign = opts.total || amount === 0 ? '' : '−';
+    tr.innerHTML = `<td></td><td class="num"></td><td class="num"></td>`;
+    tr.children[0].textContent = label;
+    tr.children[1].textContent = `${sign}${formatKrw(Math.abs(amount))}원`;
+    if (amount < 0) tr.children[1].classList.add('neg');
+    tr.children[2].textContent = share(amount, salePrice);
+    return tr;
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    out.hidden = true;
+    try {
+      const salePrice = parseKrw(form.elements.salePrice.value);
+      const costAmount = parseKrw(form.elements.costAmount.value);
+      if (salePrice === null) throw new Error('판매가를 입력하세요.');
+      if (costAmount === null) throw new Error('원가를 입력하세요.');
+
+      const policies = collectPolicies(form);
+      const { marginType, extras } = collectExtras(form);
+      const r = computeExpectedMargin({ salePrice, costAmount, marginType, extras }, policies);
+
+      document.getElementById('marginAmount').textContent = `${formatKrw(r.marginAmount)}원`;
+      document.getElementById('marginRate').textContent = `${rate4ToPercent(r.marginRate4, 2)}%`;
+      head.classList.toggle('is-bad', r.marginAmount < 0);
+
+      // 손익분기 판매가 — 목표 마진 0% 로 같은 역산 로직을 돌린다.
+      let be = '계산 불가';
+      try {
+        be = `${formatKrw(reverseCalcPriceForTargetMargin(0, costAmount, marginType, policies, extras).price)}원`;
+      } catch { /* 비용 합이 100%를 넘으면 해가 없다 — 지어내지 않는다 */ }
+      document.getElementById('breakEven').textContent = be;
+
+      rows.innerHTML = '';
+      rows.append(row('판매가', salePrice, salePrice, { total: true }));
+      rows.append(row('원가 (방식별 보정 포함)', r.realCost, salePrice));
+      rows.append(row('마켓 판매수수료', r.marketplaceFee, salePrice));
+      rows.append(row('결제(PG) 수수료', r.paymentFee, salePrice));
+      rows.append(row('광고비', r.adCost, salePrice));
+      rows.append(row('반품 위험 비용', r.returnRiskCost, salePrice));
+      rows.append(row('물류·배송 대행비', r.fulfillmentFee, salePrice));
+      rows.append(row('부가세', r.vat, salePrice));
+      rows.append(row('남는 마진', r.marginAmount, salePrice, { total: true }));
+
+      showWarnings(msg, r.warnings);
+      out.hidden = false;
+      out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) {
+      showError(msg, err.message);
+    }
+  });
+
+  form.addEventListener('reset', () => { out.hidden = true; msg.hidden = true; });
+</script>

@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import { TOOLS, PAGES } from '../lib/site.js';
+---
+
+<Base title="페이지를 찾을 수 없습니다" noindex={true}>
+  <h1>페이지를 찾을 수 없습니다</h1>
+  <p class="lede">
+    주소가 바뀌었거나 없는 페이지입니다. 아래에서 찾으시는 도구를 골라 주세요.
+  </p>
+
+  <h2>계산 도구</h2>
+  <ul>
+    {TOOLS.map((t) => <li><a href={t.href}>{t.title}</a> — {t.summary}</li>)}
+  </ul>
+
+  <h2>안내</h2>
+  <ul>
+    {PAGES.map((p) => <li><a href={p.href}>{p.title}</a></li>)}
+  </ul>
+
+  <p><a href="/">첫 화면으로 돌아가기</a></p>
+</Base>

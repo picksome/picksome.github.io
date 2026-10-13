@@ -1,0 +1,106 @@
+---
+/**
+ * 마진 유형 선택 + 유형별 추가 비용 입력. 유형을 바꾸면 해당 칸만 보인다.
+ * 필드 이름은 `src/lib/form.js` 의 `collectExtras` 와 짝이다.
+ */
+import { MARGIN_TYPES } from '../lib/calc.js';
+import { MARGIN_TYPE_HELP } from '../lib/presets.js';
+
+const helpJson = JSON.stringify(MARGIN_TYPE_HELP);
+---
+
+<div class="field" style="margin-bottom:1rem;max-width:22rem">
+  <label for="marginType">판매 방식</label>
+  <select id="marginType" name="marginType">
+    {Object.entries(MARGIN_TYPES).map(([k, v]) => <option value={k}>{v}</option>)}
+  </select>
+  <span class="hint" data-mt-help></span>
+</div>
+
+<div data-mt-group="PURCHASE_AGENCY" hidden>
+  <div class="field-grid">
+    <div class="field">
+      <label for="agencyFee">구매대행 수수료 (원)</label>
+      <input id="agencyFee" name="agencyFee" inputmode="numeric" data-krw placeholder="0" />
+      <span class="hint">현지 구매를 대행하면서 들어가는 수수료. 원가에 더해집니다.</span>
+    </div>
+    <div class="field">
+      <label for="intlShipping">국제배송비 (원)</label>
+      <input id="intlShipping" name="intlShipping" inputmode="numeric" data-krw placeholder="0" />
+      <span class="hint">해외 → 국내 배송비. 건당 금액으로 환산해 넣으세요.</span>
+    </div>
+  </div>
+</div>
+
+<div data-mt-group="OVERSEAS_DIRECT" hidden>
+  <div class="field-grid">
+    <div class="field">
+      <label for="customs">관세·통관비 (원)</label>
+      <input id="customs" name="customs" inputmode="numeric" data-krw placeholder="0" />
+    </div>
+    <div class="field">
+      <label for="fxAdjustment">환율 변동 대비 여유분 (원)</label>
+      <input id="fxAdjustment" name="fxAdjustment" inputmode="numeric" data-krw placeholder="0" />
+      <span class="hint">매입부터 정산까지 환율이 불리하게 움직일 몫을 미리 원가로 잡습니다.</span>
+    </div>
+  </div>
+</div>
+
+{/* 물류 대행비는 구매대행·해외직구 둘 다 쓰므로 한 번만 렌더한다.
+    이름이 중복되면 `form.elements.fulfillDirect` 가 NodeList 가 되어 값을 못 읽는다. */}
+<div data-mt-group="PURCHASE_AGENCY OVERSEAS_DIRECT" hidden>
+  <div class="field-grid">
+    <div class="field">
+      <label for="fulfillDirect">국내 물류·배송 대행비 (원)</label>
+      <input id="fulfillDirect" name="fulfillDirect" inputmode="numeric" data-krw placeholder="0" />
+      <span class="hint">3PL·택배 대행비. 직접 발송하면 0을 입력하세요 (비우면 “모름”).</span>
+    </div>
+  </div>
+</div>
+
+<div data-mt-group="ROCKET_GROWTH" hidden>
+  <div class="field-grid">
+    <div class="field">
+      <label for="inboundFee">입고비 (원)</label>
+      <input id="inboundFee" name="inboundFee" inputmode="numeric" data-krw placeholder="0" />
+    </div>
+    <div class="field">
+      <label for="outboundFee">출고비 (원)</label>
+      <input id="outboundFee" name="outboundFee" inputmode="numeric" data-krw placeholder="0" />
+    </div>
+    <div class="field">
+      <label for="storagePerDay">일 보관료 (원/일)</label>
+      <input id="storagePerDay" name="storagePerDay" inputmode="numeric" data-krw placeholder="0" />
+    </div>
+    <div class="field">
+      <label for="storageDays">평균 보관 일수</label>
+      <input id="storageDays" name="storageDays" inputmode="numeric" placeholder="30" value="30" />
+      <span class="hint">입고부터 판매까지 걸리는 평균 일수. 재고 회전이 느리면 커집니다.</span>
+    </div>
+  </div>
+</div>
+
+<div data-mt-group="GENERAL_RESELL" hidden>
+  <p class="hint" style="margin:0 0 .5rem">
+    직접 보관·발송하는 방식이라 물류 대행비가 없습니다.
+    택배비를 본인이 부담한다면 <strong>원가에 포함해서</strong> 입력하세요.
+  </p>
+</div>
+
+<script is:inline define:vars={{ helpJson }}>
+  (() => {
+    const HELP = JSON.parse(helpJson);
+    const sel = document.getElementById('marginType');
+    const help = document.querySelector('[data-mt-help]');
+    const groups = document.querySelectorAll('[data-mt-group]');
+    function sync() {
+      // data-mt-group 에 공백으로 여러 유형을 적을 수 있다 (두 유형이 공유하는 칸).
+      for (const g of groups) {
+        g.hidden = !g.dataset.mtGroup.split(' ').includes(sel.value);
+      }
+      if (help) help.textContent = HELP[sel.value] ?? '';
+    }
+    sel?.addEventListener('change', sync);
+    sync();
+  })();
+</script>

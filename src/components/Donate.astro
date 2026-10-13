@@ -1,0 +1,26 @@
+---
+/**
+ * 후원 버튼. `src/lib/site.js` 의 donate 링크가 비어 있으면 **아무것도 렌더하지 않는다.**
+ * 링크 없는 "후원하기" 버튼은 애드센스 심사에서 깨진 링크로 잡힌다.
+ *
+ * 토스·카카오페이 송금 링크를 받으면 site.js 에 붙이면 끝이다.
+ */
+import { SITE } from '../lib/site.js';
+
+const { tossUrl, kakaoUrl } = SITE.donate;
+const has = Boolean(tossUrl || kakaoUrl);
+---
+
+{has && (
+  <section class="donate">
+    <h2>후원</h2>
+    <p>
+      이 도구는 무료이고 광고 외에 어떤 비용도 받지 않습니다. 도움이 되었다면
+      도메인·유지비에 보태 주세요. 후원 여부와 상관없이 모든 기능을 그대로 쓸 수 있습니다.
+    </p>
+    <p>
+      {tossUrl && <a href={tossUrl} rel="noopener noreferrer" target="_blank">토스로 후원하기</a>}
+      {kakaoUrl && <a href={kakaoUrl} rel="noopener noreferrer" target="_blank">카카오페이로 후원하기</a>}
+    </p>
+  </section>
+)}

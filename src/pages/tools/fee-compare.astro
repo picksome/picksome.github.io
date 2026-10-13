@@ -1,0 +1,325 @@
+---
+import Base from '../../layouts/Base.astro';
+import { MARKETPLACES, PRESET_AS_OF, RETURN_RATE_PRESETS, TAX_PRESETS } from '../../lib/presets.js';
+import { rate4ToPercent } from '../../lib/money.js';
+import { MARGIN_TYPES } from '../../lib/calc.js';
+---
+
+<Base
+  title="오픈마켓 수수료 비교"
+  description="같은 상품을 쿠팡·스마트스토어·11번가·G마켓·옥션·자체몰에 올렸을 때 마켓별 수수료와 실제 남는 마진을 한 화면에서 비교합니다. 수수료율은 직접 수정할 수 있습니다."
+>
+  <h1>오픈마켓 수수료 비교</h1>
+  <p class="lede">
+    같은 상품을 여러 마켓에 올렸을 때 <strong>어디가 가장 많이 남는지</strong> 한 번에 비교합니다.
+    수수료율만 비교하면 안 됩니다 — 결제 수수료가 판매수수료에 포함되는 마켓과
+    따로 붙는 마켓이 섞여 있어서, 숫자가 작은 쪽이 꼭 더 남는 것은 아닙니다.
+  </p>
+
+  <form id="f" novalidate>
+    <fieldset>
+      <legend>상품 정보</legend>
+      <div class="field-grid">
+        <div class="field">
+          <label for="salePrice">판매가 (원)</label>
+          <input id="salePrice" name="salePrice" inputmode="numeric" data-krw
+                 placeholder="30,000" value="30,000" required />
+        </div>
+        <div class="field">
+          <label for="costAmount">원가·공급가 (원)</label>
+          <input id="costAmount" name="costAmount" inputmode="numeric" data-krw
+                 placeholder="12,000" value="12,000" required />
+        </div>
+        <div class="field">
+          <label for="marginType">판매 방식</label>
+          <select id="marginType" name="marginType">
+            {Object.entries(MARGIN_TYPES).map(([k, v]) => (
+              <option value={k} selected={k === 'GENERAL_RESELL'}>{v}</option>
+            ))}
+          </select>
+          <span class="hint">방식별 추가 비용은 아래 “공통 비용”의 물류비로 단순화했습니다.</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>모든 마켓에 공통으로 적용할 비용</legend>
+      <div class="field-grid">
+        <div class="field">
+          <label for="adRate">광고비 비율 (%)</label>
+          <input id="adRate" name="adRate" inputmode="decimal" value="5" />
+        </div>
+        <div class="field">
+          <label for="returnPreset">반품률 기준</label>
+          <select id="returnPreset">
+            {RETURN_RATE_PRESETS.map((r) => <option value={r.returnRate4}>{r.name}</option>)}
+            <option value="">직접 입력</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="returnRate">반품률 (%)</label>
+          <input id="returnRate" name="returnRate" inputmode="decimal" value="2" />
+        </div>
+        <div class="field">
+          <label for="fulfillDirect">물류·배송 대행비 (원)</label>
+          <input id="fulfillDirect" name="fulfillDirect" inputmode="numeric" data-krw
+                 placeholder="0" value="0" />
+          <span class="hint">사입(직접 발송)이면 0. 비우면 “모름”으로 처리합니다.</span>
+        </div>
+        <div class="field">
+          <label for="taxPreset">사업자 유형</label>
+          <select id="taxPreset">
+            {TAX_PRESETS.map((t) => <option value={t.vatRate4}>{t.name}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="vatRate">부가세율 (%)</label>
+          <input id="vatRate" name="vatRate" inputmode="decimal" value="10" required />
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>마켓별 수수료 <span class="badge est">기본값은 추정치</span></legend>
+      <p class="hint" style="margin:-.3rem 0 .9rem;color:var(--fg-faint);font-size:.82rem">
+        {PRESET_AS_OF} 기준 공개 수수료 구간의 대표값입니다.
+        <strong>정산서의 실제 요율로 고쳐서 쓰세요.</strong> 비교하지 않을 마켓은 체크를 해제하면 됩니다.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:2.5rem"><span class="hint">비교</span></th>
+              <th>마켓</th>
+              <th class="num">판매수수료 (%)</th>
+              <th class="num">결제수수료 (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {MARKETPLACES.map((m) => (
+              <tr>
+                <td>
+                  <input type="checkbox" data-mkt-on={m.id} checked
+                         aria-label={`${m.name} 비교에 포함`} />
+                </td>
+                <td>
+                  <strong>{m.name}</strong><br />
+                  <span class="hint">{m.rangeText}</span>
+                  {m.note && <><br /><span class="hint" style="color:var(--warn)">{m.note}</span></>}
+                </td>
+                <td class="num">
+                  <input data-mkt-fee={m.id} inputmode="decimal" style="width:5.5rem;text-align:right"
+                         value={rate4ToPercent(m.typicalRate4)} aria-label={`${m.name} 판매수수료율`} />
+                </td>
+                <td class="num">
+                  <input data-mkt-pay={m.id} inputmode="decimal" style="width:5.5rem;text-align:right"
+                         value={m.paymentIncluded ? '0' : '3.3'} aria-label={`${m.name} 결제수수료율`} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </fieldset>
+
+    <div class="btn-row">
+      <button type="submit" class="btn">마켓별 마진 비교</button>
+      <button type="reset" class="btn ghost">초기화</button>
+    </div>
+  </form>
+
+  <div id="msg" hidden></div>
+
+  <section id="out" class="result" hidden aria-live="polite">
+    <h2>비교 결과</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>마켓</th>
+            <th class="num">마켓수수료</th>
+            <th class="num">결제수수료</th>
+            <th class="num">부가세</th>
+            <th class="num">남는 마진</th>
+            <th class="num">마진율</th>
+            <th class="num">1위와 차이</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="hint">
+      마진이 가장 큰 마켓을 초록색으로 표시했습니다. 광고비·반품률·물류비는 모든 마켓에
+      같은 값을 적용했으므로, 마켓마다 광고 효율이 다르다면 결과도 달라집니다.
+    </p>
+  </section>
+
+  <hr />
+
+  <h2>수수료율만 비교하면 틀리는 이유</h2>
+  <p>
+    "스마트스토어 5.85%, 쿠팡 10.8%니까 스마트스토어가 두 배 낫다"는 결론은 성립하지 않습니다.
+    실제로는 그 숫자가 <strong>같은 것을 가리키지 않기</strong> 때문입니다.
+  </p>
+
+  <h3>결제 수수료 포함 여부가 다릅니다</h3>
+  <p>
+    쿠팡·스마트스토어·11번가·G마켓은 판매수수료 안에 결제(PG) 수수료가 들어 있습니다.
+    반면 카페24·아임웹 같은 자체 쇼핑몰은 판매수수료가 0%지만 PG 수수료 3% 남짓을 따로 냅니다.
+    자체몰의 "수수료 0%"를 그대로 믿고 비교하면 마진이 3% 넘게 부풀어 보입니다.
+  </p>
+  <p>
+    이 비교표는 두 항목을 분리해서 보여주고, 포함된 마켓의 결제 수수료는 기본 0으로 둡니다.
+    반대로 자체몰은 3.3%를 미리 넣어 둡니다.
+  </p>
+
+  <h3>부가세는 마켓마다 다르게 나옵니다</h3>
+  <p>
+    과세표준이 <code>판매가 − 마켓수수료</code>이기 때문에, 수수료가 높은 마켓은
+    <strong>부가세가 오히려 적게 나옵니다.</strong> 쿠팡에서 3만원을 팔면 수수료 3,240원이
+    과세표준을 깎아 부가세가 2,676원이지만, 수수료 0%인 자체몰은 3,000원이 나옵니다.
+    수수료 차이의 약 10%가 부가세로 되돌아오는 셈이라, 단순 수수료 차이보다 격차가 좁혀집니다.
+  </p>
+
+  <h3>그래도 수수료 차이가 결정적인 이유</h3>
+  <p>
+    위 보정을 다 반영해도 수수료 1%p는 그대로 마진 0.9%p 정도의 차이입니다.
+    마진율이 한 자릿수인 구간에서는 이 차이가 흑자와 적자를 갈라 놓습니다.
+    수수료가 높은 마켓에서 팔려면 같은 상품을 더 비싸게 팔아야 하고,
+    그 가격을 구하는 것이 <a href="/tools/reverse-price">판매가 역산 도구</a>입니다.
+  </p>
+
+  <h3>수수료 외에 비교해야 할 것</h3>
+  <ul>
+    <li><strong>정산 주기</strong> — 수수료가 1%p 싸도 정산이 두 달 늦으면 운전자금이 묶입니다.</li>
+    <li><strong>광고 효율</strong> — 같은 광고비로 쿠팡과 스마트스토어의 전환율은 다릅니다.
+      이 표는 광고비를 같게 두므로, 실제로는 마켓별 광고비를 따로 넣어 다시 비교해 보세요.</li>
+    <li><strong>반품률</strong> — 마켓 정책에 따라 반품률 자체가 달라집니다.</li>
+    <li><strong>쿠폰·프로모션 분담금</strong> — 마켓이 요구하는 할인 분담은 이 표에 없습니다.
+      실제 부담이 있으면 광고비 비율에 더해서 넣으세요.</li>
+  </ul>
+
+  <section class="faq">
+    <h2>자주 묻는 질문</h2>
+    <details>
+      <summary>기본 수수료율을 그대로 믿어도 되나요?</summary>
+      <p>
+        <strong>아니요.</strong> 공개 자료의 대표값이고, 카테고리마다 적게는 4%에서 많게는 13%까지
+        벌어집니다. 각 마켓 판매자 센터의 수수료 안내에서 내 카테고리 요율을 확인해 고쳐 쓰세요.
+        그래서 모든 칸을 수정할 수 있게 만들었습니다.
+      </p>
+    </details>
+    <details>
+      <summary>비교하고 싶은 마켓이 목록에 없습니다</summary>
+      <p>
+        "자체 쇼핑몰" 행의 수수료율을 그 마켓의 요율로 바꿔 쓰면 같은 비교가 됩니다.
+        목록에 추가가 필요하면 <a href="/contact">문의</a>로 알려 주세요.
+      </p>
+    </details>
+    <details>
+      <summary>입력한 숫자가 저장되나요?</summary>
+      <p>
+        저장되지 않습니다. 모든 계산은 브라우저 안에서만 실행되고, 새로 고치면 기본값으로 돌아갑니다.
+      </p>
+    </details>
+  </section>
+</Base>
+
+<script>
+  import { computeExpectedMargin } from '../../lib/calc.js';
+  import { formatKrw, parseKrw, percentToRate4, rate4ToPercent } from '../../lib/money.js';
+  import { attachThousandsFormatting, showError, showWarnings } from '../../lib/form.js';
+
+  const form = document.getElementById('f');
+  const out = document.getElementById('out');
+  const msg = document.getElementById('msg');
+  const rows = document.getElementById('rows');
+
+  attachThousandsFormatting(document);
+
+  // 반품률·부가세 프리셋 → 입력칸
+  const pctText = (r4) => rate4ToPercent(r4, 2);
+  document.getElementById('returnPreset').addEventListener('change', (e) => {
+    if (e.target.value === '') { document.getElementById('returnRate').focus(); return; }
+    document.getElementById('returnRate').value = pctText(Number(e.target.value));
+  });
+  document.getElementById('taxPreset').addEventListener('change', (e) => {
+    document.getElementById('vatRate').value = pctText(Number(e.target.value));
+  });
+
+  function cell(tr, i, text, bad = false) {
+    tr.children[i].textContent = text;
+    if (bad) tr.children[i].classList.add('neg');
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    out.hidden = true;
+    try {
+      const salePrice = parseKrw(form.elements.salePrice.value);
+      const costAmount = parseKrw(form.elements.costAmount.value);
+      if (salePrice === null) throw new Error('판매가를 입력하세요.');
+      if (costAmount === null) throw new Error('원가를 입력하세요.');
+
+      const vat4 = percentToRate4(form.elements.vatRate.value);
+      if (vat4 === null) throw new Error('부가세율을 입력하세요. (일반과세자는 10)');
+      const ad4 = percentToRate4(form.elements.adRate.value);
+      const ret4 = percentToRate4(form.elements.returnRate.value);
+      const fulfill = parseKrw(form.elements.fulfillDirect.value);
+      const marginType = form.elements.marginType.value;
+
+      const results = [];
+      const warnings = new Set();
+
+      for (const box of document.querySelectorAll('[data-mkt-on]')) {
+        if (!box.checked) continue;
+        const id = box.dataset.mktOn;
+        const name = box.closest('tr').querySelector('strong').textContent;
+        const fee4 = percentToRate4(document.querySelector(`[data-mkt-fee="${id}"]`).value);
+        const pay4 = percentToRate4(document.querySelector(`[data-mkt-pay="${id}"]`).value);
+
+        const policies = { tax: { vatRate4: vat4 } };
+        if (fee4 !== null) policies.marketplaceFee = { feeType: 'RATE', rate4: fee4 };
+        if (pay4 !== null) policies.paymentFee = { rate4: pay4 };
+        if (ret4 !== null) policies.returnRisk = { returnRate4: ret4 };
+        if (ad4 !== null) policies.adCost = { defaultAdRatio4: ad4 };
+
+        const extras = {};
+        if (fulfill !== null && marginType !== 'GENERAL_RESELL') extras.fulfillmentFee = fulfill;
+
+        const r = computeExpectedMargin({ salePrice, costAmount, marginType, extras }, policies);
+        results.push({ name, r });
+        for (const w of r.warnings) warnings.add(`${name} — ${w}`);
+      }
+
+      if (!results.length) throw new Error('비교할 마켓을 한 곳 이상 선택하세요.');
+
+      results.sort((a, b) => b.r.marginAmount - a.r.marginAmount);
+      const best = results[0].r.marginAmount;
+
+      rows.innerHTML = '';
+      for (const { name, r } of results) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td></td>' + '<td class="num"></td>'.repeat(6);
+        if (r.marginAmount === best) tr.className = 'is-best';
+        cell(tr, 0, name);
+        cell(tr, 1, `${formatKrw(r.marketplaceFee)}원`);
+        cell(tr, 2, `${formatKrw(r.paymentFee)}원`);
+        cell(tr, 3, `${formatKrw(r.vat)}원`);
+        cell(tr, 4, `${formatKrw(r.marginAmount)}원`, r.marginAmount < 0);
+        cell(tr, 5, `${rate4ToPercent(r.marginRate4, 2)}%`, r.marginAmount < 0);
+        const diff = r.marginAmount - best;
+        cell(tr, 6, diff === 0 ? '—' : `${formatKrw(diff)}원`, diff < 0);
+        rows.append(tr);
+      }
+
+      showWarnings(msg, [...warnings]);
+      out.hidden = false;
+      out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) {
+      showError(msg, err.message);
+    }
+  });
+
+  form.addEventListener('reset', () => { out.hidden = true; msg.hidden = true; });
+</script>

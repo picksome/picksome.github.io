@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.astro/
+
+# 환경·비밀값 — 정적 사이트라 원래 필요 없지만 실수로 들어오는 것을 막는다
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# 에디터·OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 로그
+npm-debug.log*
+*.log

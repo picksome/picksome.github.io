@@ -1,0 +1,75 @@
+---
+/**
+ * 모든 페이지의 공통 틀. 페이지를 추가할 때는 이 레이아웃으로 감싸기만 하면 된다.
+ *
+ * 애드센스 승인 후 광고 스크립트를 넣을 자리는 아래 ADSENSE 주석에 표시해 뒀다.
+ */
+import { SITE, TOOLS, PAGES } from '../lib/site.js';
+import '../styles/global.css';
+
+const { title, description, noindex = false } = Astro.props;
+
+const pageTitle = title ? `${title} | ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
+const pageDesc = description ?? SITE.description;
+const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', Astro.site).href;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="ko_KR" />
+    <meta name="twitter:card" content="summary" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!-- ADSENSE: 승인되면 여기에 구글이 주는 <script> 한 줄을 붙인다.
+         승인 전에 붙여 둘 필요는 없다. ads.txt 는 public/ads.txt 로 따로 넣는다. -->
+  </head>
+
+  <body>
+    <header class="site-head">
+      <div class="wrap">
+        <a class="brand" href="/">{SITE.name}</a>
+        <nav class="site-nav" aria-label="주요 메뉴">
+          {TOOLS.map((t) => (
+            <a href={t.href} aria-current={path === t.href ? 'page' : undefined}>{t.short}</a>
+          ))}
+          <a href="/about" aria-current={path === '/about' ? 'page' : undefined}>소개</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="wrap">
+        <slot />
+      </div>
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap">
+        <nav class="foot-links" aria-label="안내">
+          {PAGES.map((p) => <a href={p.href}>{p.title}</a>)}
+        </nav>
+        <p>
+          계산 결과는 <strong>참고용</strong>입니다. 실제 수수료·세금은 마켓 계약 조건과
+          사업자 유형에 따라 달라집니다. 중요한 결정은 반드시 실제 정산서와 세무 상담으로
+          확인하세요.
+        </p>
+        <p>입력한 숫자는 브라우저 안에서만 계산되며 서버로 전송·저장되지 않습니다.</p>
+        <p>© {new Date().getFullYear()} {SITE.author}. 문의: <a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+      </div>
+    </footer>
+  </body>
+</html>

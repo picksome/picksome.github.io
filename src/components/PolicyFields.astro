@@ -1,0 +1,157 @@
+---
+/**
+ * 수수료·비용 정책 입력 묶음. 마진 계산기와 역산 도구가 같이 쓴다.
+ * 필드 이름은 `src/lib/form.js` 의 `collectPolicies` 와 짝이다 — 바꾸면 양쪽을 같이 바꿀 것.
+ */
+import { MARKETPLACES, PAYMENT_METHODS, RETURN_RATE_PRESETS, TAX_PRESETS, PRESET_AS_OF } from '../lib/presets.js';
+import { rate4ToPercent } from '../lib/money.js';
+
+const { showAdDirect = true } = Astro.props;
+const presetJson = JSON.stringify({ MARKETPLACES, PAYMENT_METHODS });
+---
+
+<fieldset>
+  <legend>수수료·비용 <span class="badge est">기본값은 추정치</span></legend>
+
+  <p class="hint" style="margin:-.3rem 0 1rem;color:var(--fg-faint);font-size:.82rem">
+    마켓을 고르면 공개된 수수료 구간의 대표값이 채워집니다({PRESET_AS_OF} 기준).
+    <strong>실제 요율은 카테고리·계약마다 다르므로 정산서의 값으로 고쳐 쓰세요.</strong>
+  </p>
+
+  <div class="field-grid">
+    <div class="field">
+      <label for="marketplaceId">판매 마켓</label>
+      <select id="marketplaceId" name="marketplaceId">
+        {MARKETPLACES.map((m) => <option value={m.id}>{m.name}</option>)}
+      </select>
+      <span class="hint" data-mkt-range></span>
+    </div>
+
+    <div class="field">
+      <label for="mfeeRate">마켓 판매수수료 (%)</label>
+      <input id="mfeeRate" name="mfeeRate" inputmode="decimal" placeholder="10.8"
+             value={rate4ToPercent(MARKETPLACES[0].typicalRate4)} />
+      <span class="hint">비우면 “모름”으로 처리하고 경고를 띄웁니다. 0%라면 0을 입력하세요.</span>
+    </div>
+
+    <div class="field">
+      <label for="paymentId">결제 수단</label>
+      <select id="paymentId" name="paymentId">
+        {PAYMENT_METHODS.map((p) => <option value={p.id}>{p.name}</option>)}
+      </select>
+      <span class="hint" data-pay-range></span>
+    </div>
+
+    <div class="field">
+      <label for="pfeeRate">결제(PG) 수수료 (%)</label>
+      <input id="pfeeRate" name="pfeeRate" inputmode="decimal" placeholder="0" value="0" />
+      <span class="hint" data-pay-warn></span>
+    </div>
+
+    <div class="field">
+      <label for="adRate">광고비 비율 (%)</label>
+      <input id="adRate" name="adRate" inputmode="decimal" placeholder="5" value="5" />
+      <span class="hint">판매가 대비 광고 지출. 광고를 안 돌리면 0.</span>
+    </div>
+
+    {showAdDirect && (
+      <div class="field">
+        <label for="adCostDirect">광고비를 원으로 알 때 (원)</label>
+        <input id="adCostDirect" name="adCostDirect" inputmode="numeric" data-krw placeholder="비우면 위 비율 사용" />
+        <span class="hint">값을 넣으면 비율보다 이 금액이 우선합니다.</span>
+      </div>
+    )}
+
+    <div class="field">
+      <label for="returnPreset">반품률 기준</label>
+      <select id="returnPreset">
+        {RETURN_RATE_PRESETS.map((r) => <option value={r.returnRate4}>{r.name}</option>)}
+        <option value="">직접 입력</option>
+      </select>
+      <span class="hint">0으로 두면 “반품이 전혀 없다”는 가정입니다.</span>
+    </div>
+
+    <div class="field">
+      <label for="returnRate">반품률 (%)</label>
+      <input id="returnRate" name="returnRate" inputmode="decimal" placeholder="2" value="2" />
+      <span class="hint">반품 1건의 손실을 전체 판매에 평균한 값입니다.</span>
+    </div>
+
+    <div class="field">
+      <label for="taxPreset">사업자 유형</label>
+      <select id="taxPreset">
+        {TAX_PRESETS.map((t) => <option value={t.vatRate4}>{t.name}</option>)}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="vatRate">부가세율 (%)</label>
+      <input id="vatRate" name="vatRate" inputmode="decimal" placeholder="10" value="10" required />
+      <span class="hint">과세표준은 (판매가 − 마켓수수료)로 단순화했습니다.</span>
+    </div>
+  </div>
+</fieldset>
+
+<script is:inline define:vars={{ presetJson }}>
+  // 프리셋 선택 → 입력칸 자동 채움. 사용자가 손으로 고친 뒤에는 덮어쓰지 않는다.
+  (() => {
+    const { MARKETPLACES, PAYMENT_METHODS } = JSON.parse(presetJson);
+    const $ = (id) => document.getElementById(id);
+    const pctText = (r4) => {
+      const neg = r4 < 0, v = Math.abs(r4);
+      const f = String(v % 100).padStart(2, '0').replace(/0+$/, '');
+      return `${neg ? '-' : ''}${Math.trunc(v / 100)}${f ? '.' + f : ''}`;
+    };
+
+    const mktSel = $('marketplaceId'), mfee = $('mfeeRate');
+    const paySel = $('paymentId'), pfee = $('pfeeRate');
+    const rangeEl = document.querySelector('[data-mkt-range]');
+    const payRangeEl = document.querySelector('[data-pay-range]');
+    const payWarnEl = document.querySelector('[data-pay-warn]');
+    const retSel = $('returnPreset'), ret = $('returnRate');
+    const taxSel = $('taxPreset'), vat = $('vatRate');
+
+    let mfeeTouched = false, pfeeTouched = false, retTouched = false;
+    mfee?.addEventListener('input', () => { mfeeTouched = true; });
+    pfee?.addEventListener('input', () => { pfeeTouched = true; });
+    ret?.addEventListener('input', () => { retTouched = true; });
+
+    function syncMarket() {
+      const m = MARKETPLACES.find((x) => x.id === mktSel.value);
+      if (!m) return;
+      if (!mfeeTouched) mfee.value = pctText(m.typicalRate4);
+      if (rangeEl) rangeEl.textContent = m.rangeText ?? '';
+      // 판매수수료에 결제수수료가 포함된 마켓인데 결제수수료가 0이 아니면 이중 계산이다.
+      if (payWarnEl) {
+        const dup = m.paymentIncluded && Number(String(pfee.value).replace(/[^\d.]/g, '')) > 0;
+        payWarnEl.textContent = m.paymentIncluded
+          ? (dup ? '⚠ 이 마켓은 판매수수료에 결제수수료가 포함됩니다 — 0으로 두세요 (지금은 이중 계산).'
+                 : '이 마켓은 판매수수료에 포함되어 있어 0이 맞습니다.')
+          : '판매수수료가 없는 채널이므로 반드시 채우세요.';
+        payWarnEl.style.color = dup ? 'var(--warn)' : 'var(--fg-faint)';
+      }
+      if (m.paymentIncluded && !pfeeTouched) pfee.value = '0';
+      if (!m.paymentIncluded && !pfeeTouched && paySel.value === 'NONE') paySel.value = 'CARD';
+      if (!m.paymentIncluded && !pfeeTouched) syncPayment();
+    }
+
+    function syncPayment() {
+      const p = PAYMENT_METHODS.find((x) => x.id === paySel.value);
+      if (!p) return;
+      if (!pfeeTouched) pfee.value = pctText(p.rate4);
+      if (payRangeEl) payRangeEl.textContent = p.rangeText ?? '';
+      syncMarket();
+    }
+
+    mktSel?.addEventListener('change', syncMarket);
+    paySel?.addEventListener('change', () => { pfeeTouched = false; syncPayment(); });
+    pfee?.addEventListener('input', syncMarket);
+    retSel?.addEventListener('change', () => {
+      if (retSel.value === '') { ret.focus(); return; }
+      ret.value = pctText(Number(retSel.value)); retTouched = false;
+    });
+    taxSel?.addEventListener('change', () => { vat.value = pctText(Number(taxSel.value)); });
+
+    syncMarket();
+  })();
+</script>
