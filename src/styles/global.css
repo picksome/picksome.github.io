@@ -4,16 +4,16 @@
   color-scheme: light dark;
 
   --bg: #ffffff;
-  --bg-soft: #f4f6f8;
-  --bg-section: #f7f8fa;
+  --bg-soft: #f5f3fb;
+  --bg-section: #faf8ff;
   --bg-card: #ffffff;
-  --border: #e3e6ea;
-  --border-strong: #c9ced6;
+  --border: #e6e2f3;
+  --border-strong: #cdc6e4;
   --fg: #191f28;
   --fg-muted: #4e5968;
   --fg-faint: #6b7684;          /* 흰 배경에서도 AA(4.5:1) 이상 */
-  --accent: #1f5fd0;
-  --accent-soft: #eaf0fc;
+  --accent: #6b46e5;
+  --accent-soft: #f0ebff;
   --on-accent: #ffffff;
   --good: #11733f;
   --good-soft: #e7f5ec;
@@ -24,8 +24,8 @@
 
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
   --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 4px 16px rgb(0 0 0 / .06);
+  --radius-sm: 6px;
+  --shadow: 0 6px 24px rgb(76 47 180 / .10);
   --maxw: 64rem;                /* 그리드·표·폼 */
   --prose: 40rem;               /* 본문 글 — 한 줄 약 38~40자 */
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
@@ -33,18 +33,18 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #15181c;
-    --bg-soft: #1f2328;
-    --bg-section: #1a1e23;
-    --bg-card: #1e2227;
-    --border: #2e343b;
-    --border-strong: #454d57;
+    --bg: #121019;
+    --bg-soft: #1d1a29;
+    --bg-section: #171423;
+    --bg-card: #1c1928;
+    --border: #2f2a42;
+    --border-strong: #4a4363;
     --fg: #e8eaed;
     --fg-muted: #b0b8c4;
     --fg-faint: #9aa3ae;
-    --accent: #7aa7f5;
-    --accent-soft: #1d2a40;
-    --on-accent: #0d1626;
+    --accent: #a78bfa;
+    --accent-soft: #2a2145;
+    --on-accent: #160f2b;
     --good: #5fd398;
     --good-soft: #15291f;
     --warn: #e5b057;
