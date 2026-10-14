@@ -394,13 +394,43 @@ td.neg, .neg { color: var(--bad); }
 .related { margin-top: var(--s7); }
 .related h2 { font-size: 1.125rem; margin-top: 0; }
 
-.donate { margin: 2rem 0 0; }
-.donate a {
-  display: inline-block; padding: .55rem 1rem; border-radius: var(--radius-sm);
-  border: 1px solid var(--border-strong); color: var(--fg);
-  font-weight: 600; font-size: .9rem; margin-right: .5rem;
+/* ─── 후원 ─────────────────────────────────────────────── */
+/* 후원은 accent(파랑)와 구분되는 따뜻한 색 하나만 쓴다 */
+:root { --love: #c2255c; --love-soft: #fdebf1; }
+@media (prefers-color-scheme: dark) { :root { --love: #f783ac; --love-soft: #33202a; } }
+
+.head-donate {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .875rem; font-weight: 700; color: var(--love);
+  padding: .3rem .75rem; border-radius: 999px; background: var(--love-soft);
 }
-.donate a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.head-donate:hover { text-decoration: none; filter: brightness(1.05); }
+.head-link + .head-donate { margin-left: 0; }
+
+.btn { display: inline-flex; align-items: center; gap: .35rem; }
+.btn:hover { text-decoration: none; }
+.donate-btn { background: var(--love); border-color: var(--love); color: #fff; }
+@media (prefers-color-scheme: dark) { .donate-btn { color: #1a0d13; } }
+
+.hero-cta { display: flex; flex-wrap: wrap; gap: var(--s2); margin: 0 0 var(--s5); }
+
+.donate { margin: var(--s7) 0 0; border-color: var(--love-soft); max-width: var(--prose);
+  background: linear-gradient(180deg, var(--love-soft), var(--bg-card) 70%); }
+.donate-head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s3); }
+.donate-head h2 { margin: 0; font-size: 1.25rem; }
+.donate .ic, .donate-inline .ic { background: var(--love-soft); color: var(--love); }
+.donate .btn { background: var(--love); border-color: var(--love); color: #fff; }
+@media (prefers-color-scheme: dark) { .donate .btn { color: #1a0d13; } }
+.donate-links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); margin: 0; }
+
+.donate-inline {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3);
+  margin: var(--s5) 0 0; padding: var(--s3) var(--s4);
+  border: 1px dashed var(--love); border-radius: var(--radius); background: var(--love-soft);
+}
+.donate-inline p { flex: 1 1 16rem; margin: 0; font-size: .92rem; }
+.donate-inline strong { display: block; color: var(--fg); }
+.donate-inline .btn.ghost { color: var(--love); border-color: var(--love); padding: .45rem .9rem; }
 
 @media (max-width: 30rem) {
   .headline .big { font-size: 1.6rem; }

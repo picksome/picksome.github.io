@@ -10,9 +10,10 @@
  *   noindex             — true 면 검색 색인 제외
  *   crumb=false         — 브레드크럼 숨김 (홈 등)
  */
-import { SITE, SECTIONS, TOOLS, PROJECTS, GUIDES, PAGES } from '../lib/site.js';
+import { SITE, SECTIONS, TOOLS, PROJECTS, GUIDES, PAGES, DONATE_LINKS, GITHUB_ORG } from '../lib/site.js';
 import Icon from '../components/Icon.astro';
 import '../styles/global.css';
+import '../styles/landing.css';
 
 const { title, description, noindex = false, crumb = true } = Astro.props;
 
@@ -77,6 +78,14 @@ const crumbLd = {
   </head>
 
   <body>
+    {SITE.announce?.text && (
+      <div class="announce">
+        <div class="wrap">
+          {SITE.announce.text}.
+          <a href={SITE.announce.href}>{SITE.announce.linkText} <Icon name="arrow" size={14} /></a>
+        </div>
+      </div>
+    )}
     <header class="site-head">
       <div class="wrap head-top">
         <a class="brand" href="/" aria-label={`${SITE.name} 홈`}>
@@ -87,6 +96,14 @@ const crumbLd = {
           <span>{SITE.name}</span>
         </a>
         <a class="head-link" href="/about" aria-current={path === '/about' ? 'page' : undefined}>소개</a>
+        <a class="head-gh" href={GITHUB_ORG} rel="noopener" aria-label="GitHub 에서 소스 코드 보기">
+          <Icon name="github" size={16} /><span>GitHub</span>
+        </a>
+        {DONATE_LINKS.length > 0 && (
+          <a class="head-donate" href="/support" aria-current={path === '/support' ? 'page' : undefined}>
+            <Icon name="heart" size={16} /> 후원
+          </a>
+        )}
       </div>
 
       <nav class="wrap tabs" aria-label="주요 메뉴">
@@ -142,7 +159,10 @@ const crumbLd = {
           </div>
           <div>
             <h2 class="foot-h">사이트 정보</h2>
-            <ul>{PAGES.map((p) => <li><a href={p.href}>{p.title}</a></li>)}</ul>
+            <ul>
+              {PAGES.map((p) => <li><a href={p.href}>{p.title}</a></li>)}
+              {DONATE_LINKS.length > 0 && <li><a href="/support">후원하기</a></li>}
+            </ul>
           </div>
         </div>
         <div class="foot-legal">
@@ -151,7 +171,10 @@ const crumbLd = {
             중요한 결정은 정산서와 세무 상담으로 확인하세요.
           </p>
           <p>입력한 숫자는 서버로 전송·저장되지 않습니다.</p>
-          <p>© {new Date().getFullYear()} {SITE.author} · <a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+          <p class="foot-brand">
+            <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)" /><path d="M11 24V8h6.5a5 5 0 0 1 0 10H11" fill="none" stroke="var(--on-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            © {new Date().getFullYear()} {SITE.author} · <a href={`mailto:${SITE.email}`}>{SITE.email}</a> · <a href={GITHUB_ORG} rel="noopener">GitHub</a>
+          </p>
         </div>
       </div>
     </footer>

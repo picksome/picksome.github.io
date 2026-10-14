@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Icon from '../../components/Icon.astro';
+import Donate from '../../components/Donate.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import { MARKETPLACES, PRESET_AS_OF, RETURN_RATE_PRESETS, TAX_PRESETS } from '../../lib/presets.js';
 import { rate4ToPercent } from '../../lib/money.js';
@@ -159,6 +160,7 @@ import { MARGIN_TYPES } from '../../lib/calc.js';
       마진이 가장 큰 마켓을 초록색으로 표시했습니다. 광고비·반품률·물류비는 모든 마켓에
       같은 값을 적용했으므로, 마켓마다 광고 효율이 다르다면 결과도 달라집니다.
     </p>
+    <Donate variant="inline" />
   </section>
 
   <hr />

@@ -4,114 +4,239 @@ import Donate from '../components/Donate.astro';
 import Icon from '../components/Icon.astro';
 import ToolCard from '../components/ToolCard.astro';
 import ProgramCard from '../components/ProgramCard.astro';
-import { SECTIONS, TOOLS, PROJECTS, GUIDES } from '../lib/site.js';
+import { SITE, SECTIONS, TOOLS, PROJECTS, GUIDES, DONATE_LINKS, GITHUB_ORG } from '../lib/site.js';
+import { computeExpectedMargin, reverseCalcPriceForTargetMargin } from '../lib/calc.js';
+import { MARKETPLACES } from '../lib/presets.js';
 
 const sec = Object.fromEntries(SECTIONS.map((s) => [s.id, s]));
+
+// ── 미리보기 화면의 숫자는 지어내지 않는다. 빌드할 때 실제 계산 함수로 계산한다. ──
+// 예시 조건은 /guide 의 예시와 같다: 판매가 30,000 · 원가 12,000 · 수수료 10.8% · 광고 5% · 반품 2% · 부가세 10%
+const SALE = 30000, COST = 12000;
+const policyFor = (rate4) => ({
+  tax: { vatRate4: 1000 },
+  marketplaceFee: { feeType: 'RATE', rate4 },
+  paymentFee: { rate4: 0 },
+  returnRisk: { returnRate4: 200 },
+  adCost: { defaultAdRatio4: 500 },
+});
+const ex = computeExpectedMargin(
+  { marginType: 'GENERAL_RESELL', costAmount: COST, salePrice: SALE, extras: {} },
+  policyFor(1080),
+);
+const rev = reverseCalcPriceForTargetMargin(2000, COST, 'GENERAL_RESELL', policyFor(1080), {});
+const won = (n) => n.toLocaleString('ko-KR');
+const pct = (r4) => (r4 / 100).toFixed(2);
+const parts = [
+  { k: '원가', v: ex.realCost, c: 'p-cost' },
+  { k: '마켓 수수료', v: ex.marketplaceFee, c: 'p-fee' },
+  { k: '부가세', v: ex.vat, c: 'p-vat' },
+  { k: '광고비', v: ex.adCost, c: 'p-ad' },
+  { k: '반품 위험', v: ex.returnRiskCost, c: 'p-ret' },
+  { k: '남는 돈', v: ex.marginAmount, c: 'p-margin' },
+];
+// 마켓별 비교 — 결제 수수료가 판매수수료에 포함된 마켓만(같은 조건으로 비교 가능한 것), 기본 요율
+const byMarket = MARKETPLACES.filter((m) => m.paymentIncluded)
+  .map((m) => ({
+    name: m.name.replace(/\s*\(.*\)/, '').replace('네이버 ', ''),
+    margin: computeExpectedMargin(
+      { marginType: 'GENERAL_RESELL', costAmount: COST, salePrice: SALE, extras: {} },
+      policyFor(m.typicalRate4),
+    ).marginAmount,
+  }))
+  .sort((a, b) => b.margin - a.margin);
+const maxM = Math.max(...byMarket.map((m) => m.margin));
+const marketNames = MARKETPLACES.map((m) => m.name.replace(/\s*\(.*\)/, ''));
 ---
 
 <Base crumb={false}>
-  <section class="hero">
-    <span class="eyebrow">구매대행 · 오픈마켓 셀러를 위한 무료 도구</span>
-    <h1>셀러가 실제로 남기는 돈, 바로 계산하세요</h1>
+  <!-- ───────── 히어로 ───────── -->
+  <section class="hero hero-center">
+    <span class="pill"><Icon name="code" size={14} /> 판매를 직접 운영하며 만든 도구 · 소스 공개</span>
+    <h1>셀러가 <span class="hl">실제로 남기는 돈</span>,<br />바로 계산하세요</h1>
     <p class="lede">
       계산기는 브라우저에서 바로, 반복 업무는 설치형 프로그램으로.
-      판매를 직접 운영하며 만들어 쓰는 도구를 무료로 공개합니다.
+      판매를 직접 운영하며 만들어 쓰는 도구입니다.
+      {DONATE_LINKS.length > 0
+        ? <>모두 무료이고, <strong>여러분의 후원으로 유지됩니다.</strong></>
+        : <>모두 무료로 쓸 수 있습니다.</>}
+    </p>
+    <p class="hero-cta">
+      <a class="btn btn-lg" href="/tools"><Icon name="calc" size={18} /> 계산 도구 쓰기</a>
+      <a class="btn btn-lg ghost" href={GITHUB_ORG} rel="noopener"><Icon name="github" size={18} /> GitHub에서 보기</a>
+      <Donate variant="button" />
     </p>
     <ul class="feature-chips">
       <li><Icon name="free" size={16} />무료</li>
       <li><Icon name="user" size={16} />회원가입 없음</li>
       <li><Icon name="lock" size={16} />입력값 서버 전송 없음</li>
     </ul>
-    <ul class="highlights">
-      <li><strong>{TOOLS.length}</strong><span>계산 도구</span></li>
-      <li><strong>{PROJECTS.length}</strong><span>공개 프로그램</span></li>
-      <li><strong>{GUIDES.length}</strong><span>가이드</span></li>
+
+    <!-- 제품 미리보기 (실제 계산 결과) -->
+    <div class="mock" aria-label="마진 계산기 결과 예시">
+      <div class="mock-win">
+        <div class="mock-bar"><i></i><i></i><i></i><span>구매대행 마진 계산기</span></div>
+        <div class="mock-body">
+          <div class="mock-kpis">
+            <div><span class="lbl">판매가</span><b>{won(SALE)}원</b></div>
+            <div class="good"><span class="lbl">남는 돈</span><b>{won(ex.marginAmount)}원</b></div>
+            <div class="good"><span class="lbl">마진율</span><b>{pct(ex.marginRate4)}%</b></div>
+          </div>
+          <div class="stack" role="img" aria-label="판매가가 나뉘는 비율">
+            {parts.map((p) => <span class={p.c} style={`flex:${p.v}`} title={`${p.k} ${won(p.v)}원`}></span>)}
+          </div>
+          <ul class="stack-legend">
+            {parts.map((p) => <li><i class={p.c}></i>{p.k} <b>{won(p.v)}원</b></li>)}
+          </ul>
+        </div>
+      </div>
+      <div class="mock-float mf-left card">
+        <span class="lbl"><Icon name="target" size={14} /> 판매가 역산</span>
+        <p>목표 마진 <b>20%</b>면</p>
+        <strong>{won(rev.price)}원</strong>
+      </div>
+      <div class="mock-float mf-right card">
+        <span class="lbl"><Icon name="compare" size={14} /> 마켓별 남는 돈</span>
+        <ul class="bars">
+          {byMarket.map((m) => (
+            <li><span>{m.name}</span><i style={`width:${Math.round((m.margin / maxM) * 100)}%`}></i><b>{won(m.margin)}</b></li>
+          ))}
+        </ul>
+      </div>
+      <p class="mock-cap">
+        예시 조건: 판매가 {won(SALE)}원 · 원가 {won(COST)}원 · 광고비 5% · 반품률 2% · 부가세 10% · 마켓별 기본 요율.
+        숫자는 실제 계산기로 계산한 값입니다.
+      </p>
+    </div>
+  </section>
+
+  <!-- ───────── 지원 마켓 띠 ───────── -->
+  <section class="strip" aria-label="수수료 비교 지원 마켓">
+    <p class="strip-h">수수료 비교에서 지원하는 마켓</p>
+    <ul>{marketNames.map((n) => <li>{n}</li>)}</ul>
+  </section>
+
+  <!-- ───────── 숫자 패널 ───────── -->
+  <section class="stats">
+    <div class="stats-copy">
+      <h2>셀러가 직접 만들고<br /><span class="hl">그대로 공개한</span> 셀러 도구</h2>
+      <p>
+        실제 판매 운영에 쓰던 프로그램에서 계산 로직을 떼어 왔습니다.
+        옮긴 계산이 원본과 한 원도 다르지 않은지 자동 테스트로 확인합니다.
+      </p>
+    </div>
+    <ul class="stats-grid">
+      <li><Icon name="calc" size={26} /><strong>{TOOLS.length}</strong><span>계산 도구</span></li>
+      <li><Icon name="box" size={26} /><strong>{PROJECTS.length}</strong><span>공개 프로그램</span></li>
+      <li><Icon name="compare" size={26} /><strong>{MARKETPLACES.length}</strong><span>비교 지원 마켓</span></li>
+      <li><Icon name="check" size={26} /><strong>{SITE.verifiedTests}</strong><span>원본 대조 테스트</span></li>
+      <li><Icon name="user" size={26} /><strong>0</strong><span>회원가입 절차</span></li>
+      <li><Icon name="lock" size={26} /><strong>0</strong><span>서버로 가는 입력값</span></li>
     </ul>
   </section>
 
-  <!-- 계산 도구 -->
-  <div class="sec-head">
-    <span class="ic"><Icon name={sec.tools.icon} size={22} /></span>
-    <div><h2>{sec.tools.label}</h2><p>{sec.tools.summary}</p></div>
+  <!-- ───────── 왜 ───────── -->
+  <h2 class="center-h">왜 <span class="hl">Picksome 셀러툴</span>인가요?</h2>
+
+  <div class="why">
+    <div class="why-art" aria-hidden="true">
+      <p class="art-h">판매가 {won(SALE)}원은 이렇게 나뉩니다</p>
+      <div class="stack tall">
+        {parts.map((p) => <span class={p.c} style={`flex:${p.v}`}><em>{p.k}</em></span>)}
+      </div>
+      <p class="art-note">마켓 수수료만 빼면 <s>{won(SALE - COST - ex.marketplaceFee)}원</s> → 실제로는 <b>{won(ex.marginAmount)}원</b></p>
+    </div>
+    <div class="why-copy">
+      <h3><span class="hl">빠져나가는 돈을</span> 전부 셉니다</h3>
+      <p>
+        시중 마진 계산기 대부분은 <code>판매가 − 원가 − 수수료</code>까지만 계산합니다.
+        그 숫자를 믿고 가격을 정하면 실제 정산액은 한참 아래로 떨어집니다.
+      </p>
+      <p>부가세만 해도 판매가의 약 9%입니다. 여기에 광고비와 반품으로 나가는 몫까지 모두 뺍니다.</p>
+    </div>
   </div>
+
+  <div class="why rev">
+    <div class="why-art" aria-hidden="true">
+      <div class="flow">
+        <span class="node"><Icon name="code" size={18} /> 원본 프로그램<small>Python · 실제 장부 운영</small></span>
+        <span class="edge"></span>
+        <span class="node hl-node"><Icon name="check" size={18} /> 대조 테스트 {SITE.verifiedTests}개<small>원본을 실행해 뽑은 기대값</small></span>
+        <span class="edge"></span>
+        <span class="node"><Icon name="calc" size={18} /> 브라우저 계산기<small>이 사이트</small></span>
+      </div>
+    </div>
+    <div class="why-copy">
+      <h3><span class="hl">원본과 1원까지</span> 같은 계산</h3>
+      <p>
+        브라우저로 옮긴 계산이 원본과 다르면 의미가 없습니다. 원본 프로그램을 실제로 실행해 뽑은 값을
+        기대값으로 두고, 옮긴 계산이 같은 값을 내는지 자동으로 확인합니다.
+      </p>
+      <div class="note tip">
+        <p class="note-h"><Icon name="info" size={18} />원본이 실무에서 고친 두 가지도 그대로입니다</p>
+        <p>
+          정액 수수료의 부가세 보정을 빼면 목표 마진 20%로 역산한 가격의 실제 마진이 20.64%로 빗나갑니다.
+          구간별 수수료의 구간 검증을 건너뛰면 실제 마진이 11%가 되는 일이 생깁니다.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="why">
+    <div class="why-art" aria-hidden="true">
+      <div class="privacy-art">
+        <div class="browser"><span class="dot-row"><i></i><i></i><i></i></span><Icon name="lock" size={34} /><b>계산은 여기서 끝</b><small>내 브라우저</small></div>
+        <span class="cut">✕</span>
+        <div class="server"><Icon name="box" size={26} /><small>서버</small></div>
+      </div>
+    </div>
+    <div class="why-copy">
+      <h3><span class="hl">입력한 숫자는</span> 어디에도 가지 않습니다</h3>
+      <p>
+        원가·판매가는 셀러에게 민감한 영업 정보입니다. 모든 계산은 브라우저 안에서 실행되고,
+        입력한 숫자는 서버로 전송되거나 저장되지 않습니다.
+      </p>
+      <p>
+        <strong>"0원"과 "모른다"도 구분합니다.</strong> 비워 둔 칸은 0으로 계산하되 경고로 알려 줍니다.
+        모르는 값을 조용히 0으로 뭉개면 마진이 실제보다 높게 보이기 때문입니다.
+      </p>
+    </div>
+  </div>
+
+  <!-- ───────── 도구 목록 ───────── -->
+  <h2 class="center-h"><span class="hl">{sec.tools.label}</span></h2>
+  <p class="center-sub">{sec.tools.summary}</p>
   <ul class="tool-grid">
     {TOOLS.map((t) => <li><ToolCard tool={t} /></li>)}
   </ul>
-  <a class="more" href={sec.tools.href}>세 계산기가 계산하는 방식 보기 <Icon name="arrow" size={16} /></a>
 
-  <!-- 운영 프로그램 -->
   <div class="band">
-    <div class="sec-head" style="margin-top:0">
-      <span class="ic"><Icon name={sec.programs.icon} size={22} /></span>
-      <div><h2>{sec.programs.label}</h2><p>{sec.programs.summary}</p></div>
-    </div>
+    <h2 class="center-h" style="margin-top:0"><span class="hl">{sec.programs.label}</span></h2>
+    <p class="center-sub">{sec.programs.summary}</p>
     <ul class="prog-grid">
       {PROJECTS.map((p) => <li><ProgramCard p={p} /></li>)}
     </ul>
-    <a class="more" href={sec.programs.href}>프로그램 전체 소개 보기 <Icon name="arrow" size={16} /></a>
   </div>
 
-  <!-- 가이드 -->
-  <div class="sec-head">
-    <span class="ic"><Icon name={sec.guides.icon} size={22} /></span>
-    <div><h2>{sec.guides.label}</h2><p>{sec.guides.summary}</p></div>
-  </div>
-  <ul class="tool-grid">
-    {GUIDES.map((g) => (
-      <li>
-        <a class="tool-card" href={g.href}>
-          <span class="top"><span class="ic"><Icon name={g.icon} size={22} /></span><span class="badge">읽을거리</span></span>
-          <strong>{g.title}</strong>
-          <span class="sum">{g.summary}</span>
-          <span class="go">읽어 보기 <Icon name="arrow" size={16} /></span>
-        </a>
-      </li>
-    ))}
-  </ul>
-
-  <h2>다른 계산기와 무엇이 다른가요?</h2>
-  <p>
-    <strong>판매가에서 빠져나가는 돈을 전부 셉니다.</strong>
-    시중 마진 계산기 대부분은 <code>판매가 − 원가 − 수수료</code>까지만 계산합니다.
-  </p>
-  <p>
-    그 결과를 믿고 가격을 정하면 실제 정산액은 한참 아래로 떨어집니다.
-    부가세만 해도 판매가의 약 9%입니다.
-  </p>
-  <p>
-    이 계산기는 판매를 직접 운영하면서 쓰던 정산 프로그램의 계산 로직을 그대로 가져왔습니다.
-    실무에서 틀렸던 부분을 고친 이력이 있고, 그 수정이 여기에도 반영돼 있습니다.
-    원본 프로그램은 <a href="/programs">운영 프로그램</a>에서 볼 수 있습니다.
-  </p>
-
-  <h3>특히 두 가지를 다르게 처리합니다</h3>
-  <ul>
-    <li>
-      <strong>정액 수수료의 부가세 효과.</strong> 정액 수수료는 과세표준
-      (<code>판매가 − 마켓수수료</code>)을 줄여 부가세도 줄입니다. 수수료 1,000원의 실질 부담은 900원입니다.
+  <!-- ───────── 시작 방법 ───────── -->
+  <h2 class="center-h">이렇게 <span class="hl">시작하세요</span></h2>
+  <ul class="ways">
+    <li class="card">
+      <h3>바로 계산하기</h3>
+      <p>설치·가입 없이 브라우저에서 숫자만 넣으면 됩니다.</p>
+      <a class="btn" href="/tools">계산 도구 열기</a>
     </li>
-    <li>
-      <strong>구간별 수수료의 구간 검증.</strong> 금액 구간마다 요율이 다르면,
-      풀어낸 가격이 그 구간 안에 들어오는지 확인해야 합니다.
+    <li class="card">
+      <h3>프로그램 설치하기</h3>
+      <p>판매장부 자동 입력·운영 관리 프로그램의 소스 코드를 받아 직접 실행합니다.</p>
+      <a class="btn ghost" href={GITHUB_ORG} rel="noopener"><Icon name="github" size={16} /> GitHub</a>
+    </li>
+    <li class="card">
+      <h3>먼저 읽어 보기</h3>
+      <p>{GUIDES[0].summary}</p>
+      <a class="btn ghost" href={GUIDES[0].href}>{GUIDES[0].title}</a>
     </li>
   </ul>
-  <div class="note tip">
-    <p class="note-h"><Icon name="info" size={18} />이 보정을 빼면 생기는 일</p>
-    <p>
-      정액 수수료 보정을 빼면 목표 마진 20%로 역산한 가격의 실제 마진이 20.64%로 빗나갑니다.
-      구간 검증을 건너뛰면 목표 20%로 역산한 가격의 실제 마진이 11%가 되는 일이 생깁니다.
-    </p>
-  </div>
-
-  <h3>"0원"과 "모른다"를 구분합니다</h3>
-  <p>
-    <strong>입력칸을 비워 두면 무엇이 비어 있었는지 경고로 알려줍니다.</strong>
-    계산은 0으로 하되, 모르는 값을 아는 값처럼 보여 주지 않습니다.
-  </p>
-  <p>
-    광고를 안 돌려서 광고비가 0인 것과 광고비를 모르는 것은 다른 상태입니다.
-    둘을 섞으면 마진이 실제보다 높게 보이고, 그 숫자로 가격을 정하면 손해를 보면서도 모르게 됩니다.
-  </p>
 
   <Donate />
 </Base>

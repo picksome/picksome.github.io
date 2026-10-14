@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
 import ProgramCard from '../components/ProgramCard.astro';
+import Donate from '../components/Donate.astro';
 import { SITE, PROJECTS, GITHUB_ORG } from '../lib/site.js';
 ---
 
@@ -72,4 +73,6 @@ import { SITE, PROJECTS, GITHUB_ORG } from '../lib/site.js';
     프로그램에 대한 질문이나 오류 제보는 <a href="/contact">문의 페이지</a> 또는
     <a href={`mailto:${SITE.email}`}>{SITE.email}</a>로 보내 주세요.
   </p>
+
+  <Donate />
 </Base>

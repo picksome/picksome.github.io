@@ -1,26 +1,52 @@
 ---
 /**
- * 후원 버튼. `src/lib/site.js` 의 donate 링크가 비어 있으면 **아무것도 렌더하지 않는다.**
- * 링크 없는 "후원하기" 버튼은 애드센스 심사에서 깨진 링크로 잡힌다.
+ * 후원 영역. `src/lib/site.js` 의 donate 링크가 **하나도 없으면 아무것도 렌더하지 않는다.**
+ * (링크 없는 "후원하기" 버튼은 애드센스 심사에서 깨진 링크로 잡힌다.)
  *
- * 토스·카카오페이 송금 링크를 받으면 site.js 에 붙이면 끝이다.
+ *   <Donate />                    섹션 (홈·소개·운영 프로그램 하단)
+ *   <Donate variant="inline" />   계산 결과 바로 아래 작은 상자
+ *   <Donate variant="button" />   버튼 하나 (/support 로 이동)
+ *
+ * ⚠️ 애드센스 정책: "광고를 눌러 후원해 주세요" 같은 문구는 절대 쓰지 말 것(계정 정지 사유).
  */
-import { SITE } from '../lib/site.js';
+import Icon from './Icon.astro';
+import { DONATE_LINKS } from '../lib/site.js';
 
-const { tossUrl, kakaoUrl } = SITE.donate;
-const has = Boolean(tossUrl || kakaoUrl);
+const { variant = 'section' } = Astro.props;
+const has = DONATE_LINKS.length > 0;
 ---
 
-{has && (
-  <section class="donate">
-    <h2>후원</h2>
+{has && variant === 'button' && (
+  <a class="btn donate-btn" href="/support"><Icon name="heart" size={18} /> 후원하기</a>
+)}
+
+{has && variant === 'inline' && (
+  <aside class="donate-inline">
+    <span class="ic"><Icon name="heart" size={20} /></span>
     <p>
-      이 도구는 무료이고 광고 외에 어떤 비용도 받지 않습니다. 도움이 되었다면
-      도메인·유지비에 보태 주세요. 후원 여부와 상관없이 모든 기능을 그대로 쓸 수 있습니다.
+      <strong>계산이 도움이 됐나요?</strong>
+      이 도구는 앞으로도 무료입니다. 커피 한 잔 값의 후원이 다음 도구를 만드는 시간이 됩니다.
     </p>
+    <a class="btn ghost" href="/support">후원하기</a>
+  </aside>
+)}
+
+{has && variant === 'section' && (
+  <section class="donate card">
+    <div class="donate-head">
+      <span class="ic"><Icon name="heart" size={22} /></span>
+      <h2>이 도구가 도움이 됐다면</h2>
+    </div>
     <p>
-      {tossUrl && <a href={tossUrl} rel="noopener noreferrer" target="_blank">토스로 후원하기</a>}
-      {kakaoUrl && <a href={kakaoUrl} rel="noopener noreferrer" target="_blank">카카오페이로 후원하기</a>}
+      Picksome 셀러툴은 회원가입·유료 기능 없이 무료로 운영합니다.
+      서버 비용은 들지 않지만, <strong>새 도구를 만들고 수수료 정보를 최신으로 맞추는 데는 시간이 듭니다.</strong>
+    </p>
+    <p>후원은 그 시간을 내는 데 쓰입니다. 후원 여부와 관계없이 모든 기능은 똑같이 쓸 수 있습니다.</p>
+    <p class="donate-links">
+      {DONATE_LINKS.map((d) => (
+        <a class="btn" href={d.url} rel="noopener noreferrer" target="_blank">{d.label}</a>
+      ))}
+      <a class="more" href="/support" style="margin:0">후원금은 어디에 쓰이나요? <Icon name="arrow" size={16} /></a>
     </p>
   </section>
 )}

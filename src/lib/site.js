@@ -18,12 +18,22 @@ export const SITE = {
   email: 'picksome24@gmail.com',
   locale: 'ko-KR',
 
-  // 후원 링크. 비우면 후원 영역이 아예 렌더링되지 않는다.
-  // 토스/카카오페이 송금 링크를 받으면 여기에 붙이면 끝이다.
+  // 후원 링크. 하나라도 넣으면 사이트 곳곳(상단 버튼·계산 결과 아래·홈·/support 페이지)에 후원 안내가 켜진다.
+  // 전부 비우면 후원 관련 표시가 아예 렌더링되지 않는다.
   donate: {
-    tossUrl: '',
-    kakaoUrl: '',
+    tossUrl: '',     // 토스 앱 → 전체 → 토스아이디 → 링크 복사 (예: https://toss.me/아이디)
+    kakaoUrl: '',    // 카카오페이 → 송금 → 송금코드 → 링크 복사 (예: https://qr.kakaopay.com/...)
   },
+
+  // 맨 위 공지 띠. text 를 비우면 띠가 사라진다.
+  announce: {
+    text: '운영 프로그램 3종의 소스 코드를 GitHub에 공개했습니다',
+    linkText: '보러 가기',
+    href: '/programs',
+  },
+
+  // 홈 숫자 패널의 "원본과 대조한 검증 테스트" 개수. tests/calc.test.js 의 테스트 수와 맞출 것(npm test 의 pass 수).
+  verifiedTests: 43,
 
   // 구글 연동. 받은 값을 붙여 넣기만 하면 된다. 비우면 아무것도 렌더링되지 않는다.
   google: {
@@ -34,6 +44,12 @@ export const SITE = {
     adsenseClient: '',
   },
 };
+
+/** 후원 버튼 목록 (비어 있는 링크는 자동으로 빠진다). 수정할 일 없음 — 위 SITE.donate 만 고친다. */
+export const DONATE_LINKS = [
+  { label: '토스로 후원하기', url: SITE.donate.tossUrl },
+  { label: '카카오페이로 후원하기', url: SITE.donate.kakaoUrl },
+].filter((d) => d.url);
 
 /**
  * 상단 탭. 탭은 실제 페이지 링크다(JS 로 숨기는 탭은 검색·애드센스가 내용을 못 본다).

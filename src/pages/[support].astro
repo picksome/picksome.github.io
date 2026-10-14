@@ -1,0 +1,63 @@
+---
+/**
+ * /support — 후원 안내. site.js 의 donate 링크가 하나라도 있을 때만 만들어진다(없으면 페이지 자체가 없다).
+ */
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { SITE, DONATE_LINKS, GITHUB_ORG } from '../lib/site.js';
+
+export function getStaticPaths() {
+  return DONATE_LINKS.length ? [{ params: { support: 'support' } }] : [];
+}
+---
+
+<Base
+  title="후원"
+  description="Picksome 셀러툴은 무료로 운영됩니다. 후원금이 어디에 쓰이는지, 후원하는 방법, 돈이 들지 않는 응원 방법을 안내합니다."
+>
+  <h1>후원하기</h1>
+  <p class="lede">
+    계산 도구와 운영 프로그램은 앞으로도 무료입니다.
+    <strong>후원은 이 도구들을 계속 고치고 늘리는 시간</strong>이 됩니다.
+  </p>
+
+  <section class="donate card" style="margin-top:0">
+    <div class="donate-head">
+      <span class="ic"><Icon name="heart" size={22} /></span>
+      <h2>후원 방법</h2>
+    </div>
+    <p>송금 링크로 원하는 금액만큼 보내 주시면 됩니다. 회원가입이나 정기 결제는 없습니다.</p>
+    <p class="donate-links">
+      {DONATE_LINKS.map((d) => (
+        <a class="btn" href={d.url} rel="noopener noreferrer" target="_blank">{d.label}</a>
+      ))}
+    </p>
+  </section>
+
+  <h2>후원금은 이렇게 쓰입니다</h2>
+  <ul>
+    <li><strong>수수료 정보 갱신.</strong> 마켓 수수료와 정책이 바뀔 때마다 기본값을 다시 확인해 맞춥니다.</li>
+    <li><strong>새 도구 만들기.</strong> 셀러가 자주 묻는 계산을 도구로 추가합니다.</li>
+    <li><strong>운영 프로그램 공개 유지.</strong> 공개 저장소의 코드와 설명을 계속 정리합니다.</li>
+    <li><strong>도메인 등 유지비.</strong> 사이트 주소를 기억하기 쉬운 도메인으로 옮기는 데 씁니다.</li>
+  </ul>
+
+  <h2>후원해도, 안 해도 똑같습니다</h2>
+  <p>
+    후원자 전용 기능이나 유료 버전은 없습니다. 모든 기능을 누구나 똑같이 쓸 수 있고,
+    앞으로도 기능을 막아 두고 후원을 요구하지 않습니다.
+  </p>
+
+  <h2>돈이 들지 않는 응원도 큰 힘이 됩니다</h2>
+  <ul>
+    <li><strong>계산이 틀린 곳 알려 주기.</strong> 정산서와 결과가 다르면 <a href="/contact">문의</a>로 조건과 금액을 보내 주세요. 가장 도움이 되는 제보입니다.</li>
+    <li><strong>필요한 도구 요청하기.</strong> 있으면 좋겠다 싶은 계산이 있으면 알려 주세요.</li>
+    <li><strong>GitHub 별표.</strong> <a href={GITHUB_ORG} rel="noopener">공개 저장소</a>에 별표(Star)를 눌러 주시면 다른 셀러가 찾기 쉬워집니다.</li>
+    <li><strong>주변 셀러에게 공유하기.</strong> 같은 고민을 하는 분께 이 사이트 주소를 알려 주세요.</li>
+  </ul>
+
+  <h2>문의</h2>
+  <p>
+    후원 관련 문의는 <a href={`mailto:${SITE.email}`}>{SITE.email}</a>로 보내 주세요.
+  </p>
+</Base>
