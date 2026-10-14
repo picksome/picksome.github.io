@@ -1,0 +1,15 @@
+---
+/** 계산 도구 카드 (홈·계산 도구·관련 도구에서 공용). 카드 전체가 링크다. */
+import Icon from './Icon.astro';
+const { tool } = Astro.props;
+---
+
+<a class="tool-card" href={tool.href}>
+  <span class="top">
+    <span class="ic"><Icon name={tool.icon} size={22} /></span>
+    <span class="badges"><span class="badge tool">무료</span><span class="badge">브라우저 계산</span></span>
+  </span>
+  <strong>{tool.title}</strong>
+  <span class="sum">{tool.summary}</span>
+  <span class="go">바로 쓰기 <Icon name="arrow" size={16} /></span>
+</a>

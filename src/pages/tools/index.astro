@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import { TOOLS } from '../../lib/site.js';
+import { MARGIN_FORMULA } from '../../lib/calc.js';
+---
+
+<Base
+  title="계산 도구"
+  description="구매대행 마진 계산기, 오픈마켓 수수료 비교, 목표 마진 판매가 역산. 수수료·광고비·반품·부가세까지 빼고 실제로 남는 돈을 브라우저에서 바로 계산합니다."
+>
+  <h1>계산 도구</h1>
+  <p class="lede">
+    설치나 회원가입 없이 숫자만 넣으면 됩니다.
+    계산은 브라우저 안에서 끝나고, 입력한 숫자는 어디에도 저장되지 않습니다.
+  </p>
+
+  <ul class="tool-grid">
+    {TOOLS.map((t) => <li><ToolCard tool={t} /></li>)}
+  </ul>
+
+  <div class="band">
+    <h2>세 계산기는 같은 공식을 씁니다</h2>
+    <pre class="formula">{MARGIN_FORMULA}</pre>
+    <ul>
+      <li><strong>마진 계산기</strong>는 이 식을 그대로 계산합니다.</li>
+      <li><strong>판매가 역산</strong>은 같은 식을 판매가에 대해 거꾸로 풉니다.</li>
+      <li><strong>수수료 비교</strong>는 마켓만 바꿔 같은 식을 반복합니다.</li>
+    </ul>
+    <div class="note tip">
+      <p class="note-h"><Icon name="check" size={18} />결과가 서로 어긋나지 않습니다</p>
+      <p>역산으로 구한 가격을 마진 계산기에 넣으면 목표 마진율이 그대로 나옵니다. 식이 한 곳에만 정의돼 있기 때문입니다.</p>
+    </div>
+  </div>
+
+  <h2>어떤 계산기를 쓰면 되나요?</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>이럴 때</th><th>쓸 도구</th></tr></thead>
+      <tbody>
+        <tr><td>판매가가 정해져 있고, 얼마 남는지 알고 싶다</td><td><a href="/tools/margin">마진 계산기</a></td></tr>
+        <tr><td>어느 마켓에 올려야 가장 많이 남는지 궁금하다</td><td><a href="/tools/fee-compare">수수료 비교</a></td></tr>
+        <tr><td>목표 마진율이 있고, 판매가를 정해야 한다</td><td><a href="/tools/reverse-price">판매가 역산</a></td></tr>
+        <tr><td>손해 보지 않는 최저 판매가가 궁금하다</td><td><a href="/tools/margin">마진 계산기</a> (손익분기 판매가)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>정확하게 쓰려면</h2>
+  <ul>
+    <li><strong>수수료 기본값은 추정치입니다.</strong> 정산서에 찍힌 실제 요율로 고쳐 쓰면 정확해집니다.</li>
+    <li><strong>모르는 값은 비워 두세요.</strong> 확실히 0일 때만 <code>0</code>을 입력하세요. 비운 칸은 경고로 알려 줍니다.</li>
+    <li><strong>광고비는 평균으로 넣으세요.</strong> 자세한 이유는 <a href="/guide">마진 계산 가이드</a>에 정리했습니다.</li>
+  </ul>
+</Base>

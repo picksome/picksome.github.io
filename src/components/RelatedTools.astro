@@ -1,0 +1,14 @@
+---
+/** 페이지 하단 "다른 계산 도구" 카드. current 에 지금 페이지 href 를 넘기면 그 도구는 뺀다. */
+import ToolCard from './ToolCard.astro';
+import { TOOLS } from '../lib/site.js';
+const { current, title = '다른 계산 도구' } = Astro.props;
+const others = TOOLS.filter((t) => t.href !== current);
+---
+
+<section class="related">
+  <h2>{title}</h2>
+  <ul class="tool-grid" style="margin-top:0">
+    {others.map((t) => <li><ToolCard tool={t} /></li>)}
+  </ul>
+</section>

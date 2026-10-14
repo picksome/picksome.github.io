@@ -2,24 +2,48 @@
 /**
  * 모든 페이지의 공통 틀. 페이지를 추가할 때는 이 레이아웃으로 감싸기만 하면 된다.
  *
- * 애드센스·Search Console 값은 src/lib/site.js 의 google 에 넣으면 여기서 자동으로 붙는다.
+ * - 상단 탭·브레드크럼·푸터는 src/lib/site.js 의 SECTIONS·TOOLS·PROJECTS·GUIDES 에서 자동으로 만든다.
+ * - 애드센스·Search Console 값은 site.js 의 google 에 넣으면 여기서 자동으로 붙는다.
+ *
+ * props
+ *   title, description  — 검색 결과에 나오는 제목·설명
+ *   noindex             — true 면 검색 색인 제외
+ *   crumb=false         — 브레드크럼 숨김 (홈 등)
  */
-import { SITE, TOOLS, PAGES } from '../lib/site.js';
+import { SITE, SECTIONS, TOOLS, PROJECTS, GUIDES, PAGES } from '../lib/site.js';
+import Icon from '../components/Icon.astro';
 import '../styles/global.css';
 
-const { title, description, noindex = false } = Astro.props;
+const { title, description, noindex = false, crumb = true } = Astro.props;
 
 const pageTitle = title ? `${title} | ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
 const pageDesc = description ?? SITE.description;
 // build.format='file' 이라 빌드 때 pathname 이 /tools/margin.html 로 들어온다. 사이트맵·링크와 같은 모양으로 맞춘다.
 const path = Astro.url.pathname.replace(/(\/index)?\.html$/, '').replace(/\/$/, '') || '/';
 const canonical = new URL(path, Astro.site).href;
+
+const inSection = (s) => s.match.some((m) => path === m || path.startsWith(m + '/'));
+const current = SECTIONS.find(inSection);
+
+// 브레드크럼: 홈 › (탭) › (이 페이지). 탭 첫 화면이면 홈 › 탭.
+const crumbs = [{ href: '/', label: '홈' }];
+if (current) crumbs.push({ href: current.href, label: current.label });
+if (title && path !== '/' && path !== current?.href) crumbs.push({ href: path, label: title });
+const showCrumb = crumb && path !== '/' && crumbs.length > 1;
+const crumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: crumbs.map((c, i) => ({
+    '@type': 'ListItem', position: i + 1, name: c.label, item: new URL(c.href, Astro.site).href,
+  })),
+};
 ---
 
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>{pageTitle}</title>
     <meta name="description" content={pageDesc} />
     <link rel="canonical" href={canonical} />
@@ -34,6 +58,7 @@ const canonical = new URL(path, Astro.site).href;
     <meta name="twitter:card" content="summary" />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {showCrumb && <script type="application/ld+json" set:html={JSON.stringify(crumbLd)} />}
 
     <!-- 구글 연동: 값은 src/lib/site.js 의 google 에서만 바꾼다. 비어 있으면 렌더링되지 않는다. -->
     {SITE.google.siteVerification && (
@@ -53,35 +78,81 @@ const canonical = new URL(path, Astro.site).href;
 
   <body>
     <header class="site-head">
-      <div class="wrap">
-        <a class="brand" href="/">{SITE.name}</a>
-        <nav class="site-nav" aria-label="주요 메뉴">
-          {TOOLS.map((t) => (
-            <a href={t.href} aria-current={path === t.href ? 'page' : undefined}>{t.short}</a>
-          ))}
-          <a href="/about" aria-current={path === '/about' ? 'page' : undefined}>소개</a>
-        </nav>
+      <div class="wrap head-top">
+        <a class="brand" href="/" aria-label={`${SITE.name} 홈`}>
+          <svg class="logo" width="26" height="26" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="var(--accent)" />
+            <path d="M11 24V8h6.5a5 5 0 0 1 0 10H11" fill="none" stroke="var(--on-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>{SITE.name}</span>
+        </a>
+        <a class="head-link" href="/about" aria-current={path === '/about' ? 'page' : undefined}>소개</a>
       </div>
+
+      <nav class="wrap tabs" aria-label="주요 메뉴">
+        {SECTIONS.map((s) => (
+          <a href={s.href} aria-current={current?.id === s.id ? 'page' : undefined}>
+            <Icon name={s.icon} size={18} />
+            <span>{s.label}</span>
+          </a>
+        ))}
+      </nav>
     </header>
+
+    {current?.id === 'tools' && (
+      <nav class="wrap subnav" aria-label="계산 도구">
+        {TOOLS.map((t) => (
+          <a href={t.href} aria-current={path === t.href ? 'page' : undefined}>{t.short}</a>
+        ))}
+      </nav>
+    )}
 
     <main>
       <div class="wrap">
+        {showCrumb && (
+          <nav class="crumbs" aria-label="현재 위치">
+            <ol>
+              {crumbs.map((c, i) => (
+                <li>
+                  {i < crumbs.length - 1
+                    ? <a href={c.href}>{c.label}</a>
+                    : <span aria-current="page">{c.label}</span>}
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
         <slot />
       </div>
     </main>
 
     <footer class="site-foot">
       <div class="wrap">
-        <nav class="foot-links" aria-label="안내">
-          {PAGES.map((p) => <a href={p.href}>{p.title}</a>)}
-        </nav>
-        <p>
-          계산 결과는 <strong>참고용</strong>입니다. 실제 수수료·세금은 마켓 계약 조건과
-          사업자 유형에 따라 달라집니다. 중요한 결정은 반드시 실제 정산서와 세무 상담으로
-          확인하세요.
-        </p>
-        <p>입력한 숫자는 브라우저 안에서만 계산되며 서버로 전송·저장되지 않습니다.</p>
-        <p>© {new Date().getFullYear()} {SITE.author}. 문의: <a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+        <div class="foot-cols">
+          <div>
+            <h2 class="foot-h">계산 도구</h2>
+            <ul>{TOOLS.map((t) => <li><a href={t.href}>{t.title}</a></li>)}</ul>
+          </div>
+          <div>
+            <h2 class="foot-h">운영 프로그램 · 가이드</h2>
+            <ul>
+              {PROJECTS.map((p) => <li><a href={`/programs#${p.id}`}>{p.title}</a></li>)}
+              {GUIDES.map((g) => <li><a href={g.href}>{g.title}</a></li>)}
+            </ul>
+          </div>
+          <div>
+            <h2 class="foot-h">사이트 정보</h2>
+            <ul>{PAGES.map((p) => <li><a href={p.href}>{p.title}</a></li>)}</ul>
+          </div>
+        </div>
+        <div class="foot-legal">
+          <p>
+            계산 결과는 참고용입니다. 실제 수수료·세금은 계약 조건과 사업자 유형에 따라 다르니,
+            중요한 결정은 정산서와 세무 상담으로 확인하세요.
+          </p>
+          <p>입력한 숫자는 서버로 전송·저장되지 않습니다.</p>
+          <p>© {new Date().getFullYear()} {SITE.author} · <a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+        </div>
       </div>
     </footer>
   </body>

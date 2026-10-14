@@ -1,0 +1,75 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import ProgramCard from '../components/ProgramCard.astro';
+import { SITE, PROJECTS, GITHUB_ORG } from '../lib/site.js';
+---
+
+<Base
+  title="운영 프로그램"
+  description="Picksome 이 판매 운영에 실제로 쓰는 설치형 프로그램입니다. 셀러 운영 관리 시스템, 판매장부 반자동 입력, 블로그 콘텐츠 제작 도구의 소개와 소스 코드."
+>
+  <h1>운영 프로그램</h1>
+  <p class="lede">
+    판매를 운영하며 직접 만들어 쓰는 프로그램입니다.
+    설치해서 쓰는 방식이고, 소스 코드는 <a href={GITHUB_ORG} rel="noopener">GitHub</a>에 공개돼 있습니다.
+  </p>
+
+  <div class="note">
+    <p>
+      <strong>이 사이트에서 바로 실행되지는 않습니다.</strong>
+      서버나 개인 계정 설정이 필요하기 때문입니다. 바로 쓸 수 있는 것은 <a href="/tools">계산 도구</a>입니다.
+    </p>
+  </div>
+
+  <ul class="prog-grid">
+    {PROJECTS.map((p) => <li><ProgramCard p={p} /></li>)}
+  </ul>
+
+  {PROJECTS.map((p) => (
+    <section class="prog-detail band" id={p.id}>
+      <h2>
+        <span class="ic" style="vertical-align:middle;margin-right:.5rem"><Icon name={p.icon} size={22} /></span>
+        {p.title} <small>{p.subtitle}</small>
+      </h2>
+      <p class="meta">
+        <span class={`badge ${p.status}`}>{p.statusLabel}</span>
+        <span>{p.kind}</span>
+        {p.license && <span>라이선스 {p.license}</span>}
+      </p>
+      <p>{p.summary}</p>
+
+      <h3>만든 이유</h3>
+      {p.why.map((w) => <p>{w}</p>)}
+
+      <h3>주요 기능</h3>
+      <ul>{p.features.map((f) => <li>{f}</li>)}</ul>
+
+      <div class="note">
+        <p><strong>현재 상태.</strong> {p.status_note}</p>
+        <p>{p.relation}</p>
+      </div>
+
+      <p>
+        <a class="more" href={p.repo} rel="noopener" style="margin-top:0">
+          <Icon name="github" size={18} /> 소스 코드 보기 ({p.repo.replace('https://', '')})
+        </a>
+      </p>
+    </section>
+  ))}
+
+  <h2>공개하면서 지운 것</h2>
+  <p>
+    <strong>공개한 코드는 실제 운영 코드에서 계정 정보, 실제 주문·판매 데이터, 고객 정보를 뺀 사본입니다.</strong>
+  </p>
+  <p>
+    테스트에 쓰인 이름과 번호는 가명·임의값으로 바꿨습니다.
+    그래서 공개 저장소의 기록은 정리된 현재 상태 하나뿐이고, 개발 과정의 이력은 들어 있지 않습니다.
+  </p>
+
+  <h2>문의</h2>
+  <p>
+    프로그램에 대한 질문이나 오류 제보는 <a href="/contact">문의 페이지</a> 또는
+    <a href={`mailto:${SITE.email}`}>{SITE.email}</a>로 보내 주세요.
+  </p>
+</Base>

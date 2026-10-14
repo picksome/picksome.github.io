@@ -1,0 +1,23 @@
+---
+/** 운영 프로그램 카드 (홈·운영 프로그램 페이지 공용). */
+import Icon from './Icon.astro';
+const { p } = Astro.props;
+---
+
+<article class="card prog-card">
+  <div class="top">
+    <span class="ic"><Icon name={p.icon} size={22} /></span>
+    <span class="badges">
+      <span class={`badge ${p.status}`}>{p.statusLabel}</span>
+      <span class="badge">{p.kind}</span>
+      {p.license && <span class="badge">{p.license}</span>}
+    </span>
+  </div>
+  <h3>{p.title}<small>{p.subtitle}</small></h3>
+  <p class="sum">{p.summary}</p>
+  <ul class="chips" aria-label="사용 기술">{p.stack.map((s) => <li>{s}</li>)}</ul>
+  <div class="links">
+    <a href={`/programs#${p.id}`}>자세히 보기 <Icon name="arrow" size={16} /></a>
+    <a href={p.repo} rel="noopener"><Icon name="github" size={16} /> GitHub</a>
+  </div>
+</article>

@@ -1,5 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import RelatedTools from '../../components/RelatedTools.astro';
 import PolicyFields from '../../components/PolicyFields.astro';
 import MarginTypeFields from '../../components/MarginTypeFields.astro';
 ---
@@ -10,10 +12,15 @@ import MarginTypeFields from '../../components/MarginTypeFields.astro';
 >
   <h1>구매대행 마진 계산기</h1>
   <p class="lede">
-    판매가에서 <strong>빠져나가는 돈을 전부</strong> 빼고 실제로 손에 남는 금액을 계산합니다.
-    마켓 수수료만 빼고 계산하면 실제보다 훨씬 남는 것처럼 보입니다 —
-    결제 수수료·광고비·반품·부가세가 빠져 있기 때문입니다.
+    판매가에서 수수료·광고비·반품·부가세를 <strong>모두 빼고</strong>, 실제로 손에 남는 금액을 보여 줍니다.
   </p>
+  <div class="note tip">
+    <p class="note-h"><Icon name="info" size={18} />마켓 수수료만 빼면 실제보다 많이 남는 것처럼 보입니다</p>
+    <p>결제 수수료·광고비·반품·부가세가 빠져 있기 때문입니다.</p>
+  </div>
+  <ol class="steps" aria-label="사용 순서">
+    <li>판매가·원가 입력</li><li>수수료·비용 확인</li><li>남는 금액 확인</li>
+  </ol>
 
   <form id="f" novalidate>
     <fieldset>
@@ -81,8 +88,7 @@ import MarginTypeFields from '../../components/MarginTypeFields.astro';
     </p>
   </section>
 
-  <hr />
-
+  <div class="band">
   <h2>마진이 생각보다 안 남는 이유</h2>
   <p>
     셀러가 마진을 과대평가하는 가장 흔한 패턴은 <strong>마켓 수수료만 빼고 계산하는 것</strong>입니다.
@@ -128,6 +134,7 @@ import MarginTypeFields from '../../components/MarginTypeFields.astro';
     <li><strong>해외직구(사입)</strong> — 관세와 환율 변동분을 원가에 미리 잡아야 합니다.</li>
     <li><strong>일반 사입·리셀</strong> — 직접 보관·발송하므로 물류 대행비가 없습니다. 대신 내 택배비를 원가에 넣으세요.</li>
   </ul>
+  </div>
 
   <section class="faq">
     <h2>자주 묻는 질문</h2>
@@ -163,10 +170,7 @@ import MarginTypeFields from '../../components/MarginTypeFields.astro';
     </details>
   </section>
 
-  <p style="margin-top:2rem">
-    목표 마진율에서 거꾸로 판매가를 구하려면 <a href="/tools/reverse-price">판매가 역산 도구</a>를,
-    마켓별로 어디가 더 남는지 보려면 <a href="/tools/fee-compare">수수료 비교 도구</a>를 쓰세요.
-  </p>
+  <RelatedTools current="/tools/margin" />
 </Base>
 
 <script>
