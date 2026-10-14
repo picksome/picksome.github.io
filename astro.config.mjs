@@ -11,5 +11,8 @@ const SITE = 'https://picksome.github.io';
 export default defineConfig({
   site: SITE,
   trailingSlash: 'ignore',
+  // /tools/margin → tools/margin.html 로 만든다. 폴더(…/index.html)로 만들면 GitHub Pages 가
+  // /tools/margin 을 /tools/margin/ 으로 301 리다이렉트해서 canonical·사이트맵 주소와 어긋난다.
+  build: { format: 'file' },
   integrations: [sitemap()],
 });

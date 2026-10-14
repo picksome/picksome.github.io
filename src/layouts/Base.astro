@@ -2,7 +2,7 @@
 /**
  * 모든 페이지의 공통 틀. 페이지를 추가할 때는 이 레이아웃으로 감싸기만 하면 된다.
  *
- * 애드센스 승인 후 광고 스크립트를 넣을 자리는 아래 ADSENSE 주석에 표시해 뒀다.
+ * 애드센스·Search Console 값은 src/lib/site.js 의 google 에 넣으면 여기서 자동으로 붙는다.
  */
 import { SITE, TOOLS, PAGES } from '../lib/site.js';
 import '../styles/global.css';
@@ -11,8 +11,9 @@ const { title, description, noindex = false } = Astro.props;
 
 const pageTitle = title ? `${title} | ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
 const pageDesc = description ?? SITE.description;
-const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', Astro.site).href;
-const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+// build.format='file' 이라 빌드 때 pathname 이 /tools/margin.html 로 들어온다. 사이트맵·링크와 같은 모양으로 맞춘다.
+const path = Astro.url.pathname.replace(/(\/index)?\.html$/, '').replace(/\/$/, '') || '/';
+const canonical = new URL(path, Astro.site).href;
 ---
 
 <html lang="ko">
@@ -34,8 +35,20 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
-    <!-- ADSENSE: 승인되면 여기에 구글이 주는 <script> 한 줄을 붙인다.
-         승인 전에 붙여 둘 필요는 없다. ads.txt 는 public/ads.txt 로 따로 넣는다. -->
+    <!-- 구글 연동: 값은 src/lib/site.js 의 google 에서만 바꾼다. 비어 있으면 렌더링되지 않는다. -->
+    {SITE.google.siteVerification && (
+      <meta name="google-site-verification" content={SITE.google.siteVerification} />
+    )}
+    {SITE.google.adsenseClient && (
+      <>
+        <meta name="google-adsense-account" content={SITE.google.adsenseClient} />
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE.google.adsenseClient}`}
+          crossorigin="anonymous"
+        ></script>
+      </>
+    )}
   </head>
 
   <body>

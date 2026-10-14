@@ -21,6 +21,15 @@ export const SITE = {
     tossUrl: '',
     kakaoUrl: '',
   },
+
+  // 구글 연동. 받은 값을 붙여 넣기만 하면 된다. 비우면 아무것도 렌더링되지 않는다.
+  google: {
+    // Search Console → 소유권 확인 → "HTML 태그" 의 content="..." 안쪽 값
+    siteVerification: '',
+    // 애드센스 게시자 ID. 'ca-pub-1234567890123456' 형태.
+    // 넣으면 광고 스크립트·<meta google-adsense-account>·/ads.txt 가 자동으로 생긴다.
+    adsenseClient: '',
+  },
 };
 
 /** 네비게이션에 노출되는 도구 목록. 도구를 추가하면 여기 한 줄만 더하면 된다. */
