@@ -25,7 +25,7 @@ export const SITE = {
   // 구글 연동. 받은 값을 붙여 넣기만 하면 된다. 비우면 아무것도 렌더링되지 않는다.
   google: {
     // Search Console → 소유권 확인 → "HTML 태그" 의 content="..." 안쪽 값
-    siteVerification: '',
+    siteVerification: '90Gg-doQiHY7J7mK_wltdNOtmKIMOv38O3CEsrwYO6I',
     // 애드센스 게시자 ID. 'ca-pub-1234567890123456' 형태.
     // 넣으면 광고 스크립트·<meta google-adsense-account>·/ads.txt 가 자동으로 생긴다.
     adsenseClient: '',
