@@ -59,6 +59,8 @@ const crumbLd = {
     <meta name="twitter:card" content="summary" />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- Pretendard (SIL OFL 1.1) — 사이트 안에 직접 둔다(외부 글꼴 서버 요청 없음). 쓰인 글자 조각만 받는 다이내믹 서브셋. -->
+    <link rel="stylesheet" href="/fonts/pretendard/pretendard.css" />
     {showCrumb && <script type="application/ld+json" set:html={JSON.stringify(crumbLd)} />}
 
     <!-- 구글 연동: 값은 src/lib/site.js 의 google 에서만 바꾼다. 비어 있으면 렌더링되지 않는다. -->
@@ -87,33 +89,35 @@ const crumbLd = {
       </div>
     )}
     <header class="site-head">
-      <div class="wrap head-top">
+      <div class="wrap head-row">
         <a class="brand" href="/" aria-label={`${SITE.name} 홈`}>
-          <svg class="logo" width="26" height="26" viewBox="0 0 32 32" aria-hidden="true">
+          <svg class="logo" width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
             <rect width="32" height="32" rx="8" fill="var(--accent)" />
             <path d="M11 24V8h6.5a5 5 0 0 1 0 10H11" fill="none" stroke="var(--on-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
           <span>{SITE.name}</span>
         </a>
-        <a class="head-link" href="/about" aria-current={path === '/about' ? 'page' : undefined}>소개</a>
-        <a class="head-gh" href={GITHUB_ORG} rel="noopener" aria-label="GitHub 에서 소스 코드 보기">
-          <Icon name="github" size={16} /><span>GitHub</span>
-        </a>
-        {DONATE_LINKS.length > 0 && (
-          <a class="head-donate" href="/support" aria-current={path === '/support' ? 'page' : undefined}>
-            <Icon name="heart" size={16} /> 후원
-          </a>
-        )}
-      </div>
 
-      <nav class="wrap tabs" aria-label="주요 메뉴">
-        {SECTIONS.map((s) => (
-          <a href={s.href} aria-current={current?.id === s.id ? 'page' : undefined}>
-            <Icon name={s.icon} size={18} />
-            <span>{s.label}</span>
+        <!-- 주요 메뉴: 데스크톱은 로고 옆 한 줄, 모바일은 아래 줄로 내려간다. 전부 실제 링크. -->
+        <nav class="main-nav" aria-label="주요 메뉴">
+          {SECTIONS.map((s) => (
+            <a href={s.href} aria-current={current?.id === s.id ? 'page' : undefined}>{s.label}</a>
+          ))}
+          <a href="/about" aria-current={path === '/about' ? 'page' : undefined}>소개</a>
+        </nav>
+
+        <div class="head-actions">
+          <a class="head-gh" href={GITHUB_ORG} rel="noopener" aria-label="GitHub 에서 소스 코드 보기">
+            <Icon name="github" size={16} /><span>GitHub</span>
           </a>
-        ))}
-      </nav>
+          {DONATE_LINKS.length > 0 && (
+            <a class="head-donate" href="/support" aria-current={path === '/support' ? 'page' : undefined}>
+              <Icon name="heart" size={16} /><span>후원</span>
+            </a>
+          )}
+          <a class="btn head-cta" href="/tools">계산 시작하기</a>
+        </div>
+      </div>
     </header>
 
     {current?.id === 'tools' && (
@@ -146,6 +150,14 @@ const crumbLd = {
     <footer class="site-foot">
       <div class="wrap">
         <div class="foot-cols">
+          <div class="foot-about">
+            <a class="brand foot-logo" href="/">
+              <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#a78bfa" /><path d="M11 24V8h6.5a5 5 0 0 1 0 10H11" fill="none" stroke="#160f2b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <span>{SITE.name}</span>
+            </a>
+            <p>{SITE.tagline}. 판매를 직접 운영하며 만든 계산 도구와 운영 프로그램을 공개합니다.</p>
+            <a class="head-gh foot-gh" href={GITHUB_ORG} rel="noopener"><Icon name="github" size={16} /><span>GitHub</span></a>
+          </div>
           <div>
             <h2 class="foot-h">계산 도구</h2>
             <ul>{TOOLS.map((t) => <li><a href={t.href}>{t.title}</a></li>)}</ul>
@@ -172,8 +184,7 @@ const crumbLd = {
           </p>
           <p>입력한 숫자는 서버로 전송·저장되지 않습니다.</p>
           <p class="foot-brand">
-            <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)" /><path d="M11 24V8h6.5a5 5 0 0 1 0 10H11" fill="none" stroke="var(--on-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></svg>
-            © {new Date().getFullYear()} {SITE.author} · <a href={`mailto:${SITE.email}`}>{SITE.email}</a> · <a href={GITHUB_ORG} rel="noopener">GitHub</a>
+            © {new Date().getFullYear()} {SITE.author} · <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
           </p>
         </div>
       </div>
