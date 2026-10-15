@@ -42,7 +42,7 @@ export const SITE = {
     siteVerification: '90Gg-doQiHY7J7mK_wltdNOtmKIMOv38O3CEsrwYO6I',
     // 애드센스 게시자 ID. 'ca-pub-1234567890123456' 형태.
     // 넣으면 광고 스크립트·<meta google-adsense-account>·/ads.txt 가 자동으로 생긴다.
-    adsenseClient: '',
+    adsenseClient: 'ca-pub-8177804881639866',
   },
 };
 
